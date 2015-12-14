@@ -1,0 +1,13 @@
+canvas {
+	image-rendering: pixelated;
+}
+
+.diff {
+	width: 600px;
+	height: 300px;
+}
+
+.result {
+	width: 100px;
+	height: 100px;
+}
