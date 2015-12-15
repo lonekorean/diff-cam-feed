@@ -75,7 +75,7 @@ function requestCam() {
 
 /*
 	old syntax...
-
+	test
 
 	var promise = navigator.webkitGetUserMedia({
 		audio: false,
