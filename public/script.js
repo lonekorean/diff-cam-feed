@@ -6,6 +6,8 @@ $(function() {
 	diffContext = diffCanvas.getContext('2d');
 
 	drawImages();
+
+	requestCam();
 });
 
 function drawImages() {
@@ -50,3 +52,42 @@ function makeGrayscale() {
 
 	diffContext.putImageData(imgData, 0, 0);
 }
+
+function requestCam() {
+	var video = $('video')[0];
+
+	var promise = navigator.mediaDevices.getUserMedia({
+		audio: false,
+		video: true
+	});
+
+	promise
+		.then(function(stream) {
+			console.log('hooray!');
+			//video.srcObject = stream;
+			video.srcObject = stream;
+		})
+		.catch(function(error) {
+			console.log(error);
+		});
+}
+
+
+/*
+	old syntax...
+
+
+	var promise = navigator.webkitGetUserMedia({
+		audio: false,
+		video: true
+	},
+	function(stream) {
+		video.src = window.URL.createObjectURL(stream);
+         video.onloadedmetadata = function(e) {
+           video.play();
+         };
+	},
+	function(error){
+		console.log(error);
+	});
+*/
