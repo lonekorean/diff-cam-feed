@@ -1,0 +1,13 @@
+canvas {
+  -ms-interpolation-mode: nearest-neighbor;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: pixelated; }
+
+.diff {
+  width: 600px;
+  height: 300px; }
+
+.result {
+  width: 100px;
+  height: 100px; }

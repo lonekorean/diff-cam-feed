@@ -21,10 +21,10 @@ function drawImages() {
 		img2.onload = function() {
 			diffContext.drawImage(img2, 0, 0, 40, 20);
 			makeGrayscale();
-		}
+		};
 		img2.src = 'images/transistor2.jpg';
 
-	}
+	};
 	img1.src = 'images/transistor1.jpg';
 }
 
