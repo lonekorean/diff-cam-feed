@@ -1,5 +1,7 @@
 var diffCanvas;
 var diffContext;
+var captureInterval;
+var captures = [];
 
 $(function() {
 	diffCanvas = $('.diff')[0];
@@ -8,49 +10,11 @@ $(function() {
 	drawImages();
 
 	requestCam();
+
+	startCaptures();
 });
 
 function drawImages() {
-	diffContext.globalCompositeOperation = 'difference';
-
-	img1 = new Image();
-	img1.onload = function() {
-		diffContext.drawImage(img1, 0, 0, 40, 20);
-
-		img2 = new Image();
-		img2.onload = function() {
-			diffContext.drawImage(img2, 0, 0, 40, 20);
-			makeGrayscale();
-		};
-		img2.src = 'images/transistor2.jpg';
-
-	};
-	img1.src = 'images/transistor1.jpg';
-}
-
-function makeGrayscale() {
-	var imgData = diffContext.getImageData(0, 0, diffCanvas.width, diffCanvas.height);
-	var data = imgData.data;
-
-	var lit = 0;
-	var overallAvg = 0;
-	for (var i = 0; i < data.length; i += 4) {
-		var avg = data[i] * 0.3 + data[i + 1] * 0.6 + data[i + 2] * 0.1;
-		data[i] = 0;
-		data[i + 1] = avg;
-		data[i + 2] = 0;
-
-		if (avg >= 128) {
-			lit++;
-		}
-
-		overallAvg += avg;
-	}
-
-	overallAvg /= (data.length / 4);
-	console.log(lit, overallAvg);
-
-	diffContext.putImageData(imgData, 0, 0);
 }
 
 function requestCam() {
@@ -63,8 +27,6 @@ function requestCam() {
 
 	promise
 		.then(function(stream) {
-			console.log('hooray!');
-			//video.srcObject = stream;
 			video.srcObject = stream;
 		})
 		.catch(function(error) {
@@ -72,22 +34,42 @@ function requestCam() {
 		});
 }
 
+function startCaptures() {
+	var captureInterval = self.setInterval(capture, 100);
+}
 
-/*
-	old syntax...
-	test
+function capture() {
+	var video = $('video')[0];
+	var canvas = document.createElement('canvas');
+	var context = canvas.getContext('2d');
 
-	var promise = navigator.webkitGetUserMedia({
-		audio: false,
-		video: true
-	},
-	function(stream) {
-		video.src = window.URL.createObjectURL(stream);
-         video.onloadedmetadata = function(e) {
-           video.play();
-         };
-	},
-	function(error){
-		console.log(error);
-	});
-*/
+	canvas.width = 320;
+	canvas.height = 240;
+	context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+	var data = canvas.toDataURL('image/png');
+	captures.unshift(data);
+	captures.length = 2;
+
+	$('.capture1').attr('src', captures[0]);
+	$('.capture2').attr('src', captures[1]);
+
+	// TODO: sloppy copy/paste, clean up
+	img1 = new Image();
+	img1.onload = function() {
+		img2 = new Image();
+		img2.onload = function() {
+			var result = self.dc.imageDiff.diff(img1, img2, {
+				width: 32,
+				height: 24,
+				threshold: 128
+			});
+			diffCanvas.width = 32;
+			diffCanvas.height = 24;
+			diffContext.putImageData(result.imgData, 0, 0);
+			$('.movement').text(result.diffAverage > 1 ? 'Moving!' : 'Still...');
+		};
+		img2.src = captures[1];
+	};
+	img1.src = captures[0];
+}
