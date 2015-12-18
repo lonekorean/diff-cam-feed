@@ -10,5 +10,5 @@ node_modules
 # Ignore Thumbs.db files on Windows
 Thumbs.db
 
-# Ignore generated CSS and JS
-
+# Ignore build generated stuff
+public
