@@ -11,5 +11,4 @@ node_modules
 Thumbs.db
 
 # Ignore generated CSS and JS
-#public/css/*.css
-#public/js/*.js
+

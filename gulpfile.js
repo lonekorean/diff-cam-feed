@@ -5,8 +5,9 @@ var gulp = require('gulp'),
 	jshintStylish = require('jshint-stylish');
 
 // file paths
-var cssSources = ['./styles/**/*.scss'],
-	jsFrontSources = ['./scripts/**/*.js'],
+var staticFrontSources = ['./front/**/*.{html,gif,jpg,png}'],
+	cssFrontSources = ['./front/styles/**/*.scss'],
+	jsFrontSources = ['./front/scripts/**/*.js'],
 	jsBackSources = ['app.js', 'gulpfile.js', 'package.json'];
 
 // prefer jshint config here rather than hidden file
@@ -17,9 +18,15 @@ var jshintConfig = {
 	}
 };
 
-// css stuff
-gulp.task('css', function() {
-	gulp.src(cssSources)
+// front-end static stuff
+gulp.task('static-front', function() {
+	gulp.src(staticFrontSources)
+		.pipe(gulp.dest('./public'));
+});
+
+// front-end css stuff
+gulp.task('css-front', function() {
+	gulp.src(cssFrontSources)
 		.pipe(sass({ errLogToConsole: true }))
 		.pipe(autoprefixer())
 		.pipe(gulp.dest('./public/css'));
@@ -41,11 +48,12 @@ gulp.task('js-back', function() {
 });
 
 // build site
-gulp.task('build', ['css', 'js-front', 'js-back']);
+gulp.task('build', ['static-front', 'css-front', 'js-front', 'js-back']);
 
 // build site and watch for changes
 gulp.task('watch', ['build'], function() {
-	gulp.watch(cssSources, ['css']);
+	gulp.watch(staticFrontSources, ['static-front']);
+	gulp.watch(cssFrontSources, ['css-front']);
 	gulp.watch(jsFrontSources, ['js-front']);
 	gulp.watch(jsBackSources, ['js-back']);
 });
