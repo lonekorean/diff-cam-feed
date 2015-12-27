@@ -11,4 +11,4 @@ node_modules
 Thumbs.db
 
 # Ignore build generated stuff
-public
+dist

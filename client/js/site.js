@@ -67,7 +67,8 @@ function capture() {
 			diffCanvas.width = 32;
 			diffCanvas.height = 24;
 			diffContext.putImageData(result.imgData, 0, 0);
-			$('.movement').text(result.diffAverage > 1 ? 'Moving!' : 'Still...');
+			$('.movement').text(result.diffAverage > 5 ? 'Moving!' : 'Still...');
+			console.log(result.diffAverage);
 		};
 		img2.src = captures[1];
 	};

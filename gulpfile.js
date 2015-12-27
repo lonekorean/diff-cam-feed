@@ -5,10 +5,19 @@ var gulp = require('gulp'),
 	jshintStylish = require('jshint-stylish');
 
 // file paths
-var staticFrontSources = ['./front/**/*.{html,gif,jpg,png}'],
-	cssFrontSources = ['./front/styles/**/*.scss'],
-	jsFrontSources = ['./front/scripts/**/*.js'],
-	jsBackSources = ['app.js', 'gulpfile.js', 'package.json'];
+var sources = {
+	'client': {
+		'static': ['./client/**/*.{html,gif,jpg,png}'],
+		'css': ['./client/css/**/*.scss'],
+		'js': ['./client/js/**/*.js']
+	},
+	'server': {
+		'js': ['./server/**/*.js']
+	},
+	'tools': {
+		'js': ['gulpfile.js', 'package.json']
+	}
+};
 
 // prefer jshint config here rather than hidden file
 var jshintConfig = {
@@ -19,41 +28,50 @@ var jshintConfig = {
 };
 
 // front-end static stuff
-gulp.task('static-front', function() {
-	gulp.src(staticFrontSources)
-		.pipe(gulp.dest('./public'));
+gulp.task('client-static', function() {
+	gulp.src(sources.client.static)
+		.pipe(gulp.dest('./dist/client'));
 });
 
 // front-end css stuff
-gulp.task('css-front', function() {
-	gulp.src(cssFrontSources)
+gulp.task('client-css', function() {
+	gulp.src(sources.client.css)
 		.pipe(sass({ errLogToConsole: true }))
 		.pipe(autoprefixer())
-		.pipe(gulp.dest('./public/css'));
+		.pipe(gulp.dest('./dist/client/css'));
 });
 
 // front-end javascript
-gulp.task('js-front', function() {
-	gulp.src(jsFrontSources)
+gulp.task('client-js', function() {
+	gulp.src(sources.client.js)
 		.pipe(jshint(jshintConfig))
 		.pipe(jshint.reporter(jshintStylish))
-		.pipe(gulp.dest('./public/js'));
+		.pipe(gulp.dest('./dist/client/js'));
 });
 
 // back-end javascript
-gulp.task('js-back', function() {
-	gulp.src(jsBackSources)
+gulp.task('server-js', function() {
+	gulp.src(sources.server.js)
+		.pipe(jshint(jshintConfig))
+		.pipe(jshint.reporter(jshintStylish))
+		.pipe(gulp.dest('./dist/server'));
+});
+
+// build tools javascript
+gulp.task('tools-js', function() {
+	gulp.src(sources.tools.js)
 		.pipe(jshint(jshintConfig))
 		.pipe(jshint.reporter(jshintStylish));
 });
 
 // build site
-gulp.task('build', ['static-front', 'css-front', 'js-front', 'js-back']);
+gulp.task('build', ['client-static', 'client-css', 'client-js', 'server-js', 'tools-js']);
 
 // build site and watch for changes
 gulp.task('watch', ['build'], function() {
-	gulp.watch(staticFrontSources, ['static-front']);
-	gulp.watch(cssFrontSources, ['css-front']);
-	gulp.watch(jsFrontSources, ['js-front']);
-	gulp.watch(jsBackSources, ['js-back']);
+	gulp.watch(sources.client.static, ['client-static']);
+	gulp.watch(sources.client.css, ['client-css']);
+	gulp.watch(sources.client.js, ['client-js']);
+	gulp.watch(sources.server.js, ['server-js']);
+	gulp.watch(sources.tools.js, ['tools-js']);
 });
