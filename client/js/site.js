@@ -1,76 +1,109 @@
-var diffCanvas;
-var diffContext;
-var captureInterval;
-var captures = [];
+(function() {
+	var captureIntervalDelay = 100;
+	var captureWidth = 320;
+	var captureHeight = 240;
+	var diffWidth = 32;
+	var diffHeight = 24;
+	var diffThreshold = 128;
 
-$(function() {
-	diffCanvas = $('.diff')[0];
-	diffContext = diffCanvas.getContext('2d');
+	var streamVideo, motionImage, captureCanvas, captureContext, diffCanvas, diffContext;
+	var captureInterval;
+	var captures = [];
+	var capturesCount = 2;
 
-	drawImages();
+	function init() {
+		streamVideo = document.getElementById('stream');
+		motionImage = document.getElementById('motion');
 
-	requestCam();
+		captureCanvas = document.createElement('canvas');
+		captureCanvas.width = captureWidth;
+		captureCanvas.height = captureHeight;
+		captureContext = captureCanvas.getContext('2d');
 
-	startCaptures();
-});
+		diffCanvas = document.createElement('canvas');
+		diffCanvas.width = diffWidth;
+		diffCanvas.height = diffHeight;
+		diffContext = diffCanvas.getContext('2d');
+		diffContext.globalCompositeOperation = 'difference';
 
-function drawImages() {
-}
+		requestCam();
+	}
 
-function requestCam() {
-	var video = $('video')[0];
-
-	var promise = navigator.mediaDevices.getUserMedia({
-		audio: false,
-		video: true
-	});
-
-	promise
-		.then(function(stream) {
-			video.srcObject = stream;
-		})
-		.catch(function(error) {
-			console.log(error);
-		});
-}
-
-function startCaptures() {
-	var captureInterval = self.setInterval(capture, 100);
-}
-
-function capture() {
-	var video = $('video')[0];
-	var canvas = document.createElement('canvas');
-	var context = canvas.getContext('2d');
-
-	canvas.width = 320;
-	canvas.height = 240;
-	context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-	var data = canvas.toDataURL('image/png');
-	captures.unshift(data);
-	captures.length = 2;
-
-	$('.capture1').attr('src', captures[0]);
-	$('.capture2').attr('src', captures[1]);
-
-	// TODO: sloppy copy/paste, clean up
-	img1 = new Image();
-	img1.onload = function() {
-		img2 = new Image();
-		img2.onload = function() {
-			var result = self.dc.imageDiff.diff(img1, img2, {
-				width: 32,
-				height: 24,
-				threshold: 128
-			});
-			diffCanvas.width = 32;
-			diffCanvas.height = 24;
-			diffContext.putImageData(result.imgData, 0, 0);
-			$('.movement').text(result.diffAverage > 5 ? 'Moving!' : 'Still...');
-			console.log(result.diffAverage);
+	function requestCam() {
+		var constraints = {
+			audio: false,
+			video: { width: captureWidth, height: captureHeight }
 		};
-		img2.src = captures[1];
-	};
-	img1.src = captures[0];
-}
+
+		navigator.mediaDevices.getUserMedia(constraints)
+			.then(startStreamingVideo)
+			.catch(displayError);
+	}
+
+	function startStreamingVideo(stream) {
+		streamVideo.srcObject = stream;
+		startCapturing();
+	}
+
+	function displayError(error) {
+		console.log(error);
+	}
+
+	function startCapturing() {
+		captureInterval = self.setInterval(getCapture, captureIntervalDelay);
+	}
+
+	function getCapture() {
+		captureContext.drawImage(streamVideo, 0, 0, captureWidth, captureHeight);
+
+		var newImage = new Image();
+		newImage.onload = saveCapture;
+		newImage.src = captureCanvas.toDataURL('image/png');
+	}
+
+	function saveCapture() {
+		captures.unshift(this);
+		captures.length = capturesCount; // TODO: fix truncating with undefined
+
+		var oldImage = captures[captures.length - 1];
+		var result = checkDiff(oldImage, this);
+		console.log(result);
+		motionImage.src = result.diffDataURL;
+	}
+
+	function checkDiff(oldImage, newImage) {
+		diffContext.clearRect(0, 0, diffWidth, diffHeight);
+		diffContext.drawImage(oldImage, 0, 0, diffWidth, diffHeight);
+		diffContext.drawImage(newImage, 0, 0, diffWidth, diffHeight);
+
+		var diffImgData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
+		var rgba = diffImgData.data;
+
+		var thresholdCount = 0;
+		var diffAverage = 0;
+		for (var i = 0; i < rgba.length; i += 4) {
+			var diff = rgba[i] * 0.3 + rgba[i + 1] * 0.6 + rgba[i + 2] * 0.1;
+			rgba[i] = 0;
+			rgba[i + 1] = diff;
+			rgba[i + 2] = 0;
+
+			if (diff >= diffThreshold) {
+				thresholdCount++;
+			}
+			diffAverage += diff;
+		}
+		diffAverage /= rgba.length / 4;
+
+		// TODO: if I have to redraw on a canvas anyway, change motion back to canvas?
+		diffContext.clearRect(0, 0, diffWidth, diffHeight);
+		diffContext.putImageData(diffImgData, 0, 0);
+
+		return {
+			diffDataURL: diffCanvas.toDataURL(),
+			thresholdCount: thresholdCount,
+			diffAverage: diffAverage
+		};
+	}
+
+	init();
+})();

@@ -9,23 +9,22 @@
 		<link href="css/site.css" rel="stylesheet">
 	</head>
 	<body>
+		<h1>Diff Cam</h1>
 
-		<video autoplay></video>
-		<canvas class="diff" width="320" height="240"></canvas>
-
-		<br>
-
-		<img class="capture1">
-		<img class="capture2">
-
-		<br>
-
-		<h1 class="movement"></h1>
+		<div>
+			<figure>
+				<video id="stream" autoplay></video>
+				<figcaption>Live Stream</figcaption>
+			</figure>
+			<figure>
+				<img id="motion">
+				<figcaption>Motion Detection</figcaption>
+			</figure>
+		</div>
 
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 		<script src="js/vendor/adapter.js"></script>
 
-		<script src="js/image-diff.js"></script>
 		<script src="js/site.js"></script>
 	</body>
 </html>
