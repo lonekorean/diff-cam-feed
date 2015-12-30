@@ -5,15 +5,15 @@
 	var diffWidth = 32;
 	var diffHeight = 24;
 	var diffThreshold = 128;
+	var diffSpan = 5;
 
-	var streamVideo, motionImage, captureCanvas, captureContext, diffCanvas, diffContext;
+	var verdict, streamVideo, captureCanvas, captureContext, diffCanvas, diffContext, motionCanvas, motionContext;
 	var captureInterval;
 	var captures = [];
-	var capturesCount = 2;
 
 	function init() {
+		verdict = document.getElementById('verdict');
 		streamVideo = document.getElementById('stream');
-		motionImage = document.getElementById('motion');
 
 		captureCanvas = document.createElement('canvas');
 		captureCanvas.width = captureWidth;
@@ -25,6 +25,11 @@
 		diffCanvas.height = diffHeight;
 		diffContext = diffCanvas.getContext('2d');
 		diffContext.globalCompositeOperation = 'difference';
+
+		motionCanvas = document.getElementById('motion');
+		motionCanvas.width = diffWidth;
+		motionCanvas.height = diffHeight;
+		motionContext = motionCanvas.getContext('2d');		
 
 		requestCam();
 	}
@@ -63,12 +68,12 @@
 
 	function saveCapture() {
 		captures.unshift(this);
-		captures.length = capturesCount; // TODO: fix truncating with undefined
+		captures = captures.slice(0, diffSpan);
 
 		var oldImage = captures[captures.length - 1];
-		var result = checkDiff(oldImage, this);
-		console.log(result);
-		motionImage.src = result.diffDataURL;
+		var diff = checkDiff(oldImage, this);
+		verdict.textContent = diff.thresholdCount >= 5 ? 'yes' : 'no';
+		motionContext.putImageData(diff.imgData, 0, 0);
 	}
 
 	function checkDiff(oldImage, newImage) {
@@ -76,8 +81,8 @@
 		diffContext.drawImage(oldImage, 0, 0, diffWidth, diffHeight);
 		diffContext.drawImage(newImage, 0, 0, diffWidth, diffHeight);
 
-		var diffImgData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
-		var rgba = diffImgData.data;
+		var imgData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
+		var rgba = imgData.data;
 
 		var thresholdCount = 0;
 		var diffAverage = 0;
@@ -94,12 +99,8 @@
 		}
 		diffAverage /= rgba.length / 4;
 
-		// TODO: if I have to redraw on a canvas anyway, change motion back to canvas?
-		diffContext.clearRect(0, 0, diffWidth, diffHeight);
-		diffContext.putImageData(diffImgData, 0, 0);
-
 		return {
-			diffDataURL: diffCanvas.toDataURL(),
+			imgData: imgData,
 			thresholdCount: thresholdCount,
 			diffAverage: diffAverage
 		};
