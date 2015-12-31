@@ -4,8 +4,8 @@
 	var captureHeight = 240;
 	var diffWidth = 32;
 	var diffHeight = 24;
-	var diffThreshold = 128;
-	var diffSpan = 5;
+	var diffThreshold = 32;
+	var diffSpan = 2;
 
 	var verdict, streamVideo, captureCanvas, captureContext, diffCanvas, diffContext, motionCanvas, motionContext;
 	var captureInterval;
@@ -88,8 +88,9 @@
 		var diffAverage = 0;
 		for (var i = 0; i < rgba.length; i += 4) {
 			var diff = rgba[i] * 0.3 + rgba[i + 1] * 0.6 + rgba[i + 2] * 0.1;
+			var lit = Math.min(255, diff * (255 / diffThreshold));
 			rgba[i] = 0;
-			rgba[i + 1] = diff;
+			rgba[i + 1] = lit;
 			rgba[i + 2] = 0;
 
 			if (diff >= diffThreshold) {
