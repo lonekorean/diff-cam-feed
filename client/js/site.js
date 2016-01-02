@@ -11,11 +11,11 @@
 	var scoreThreshold = 4;			// min for an image to be considered different
 
 	// shared
-	var isCaptureWindow;			// currently within a capture window?
+	var isCaptureWindow;			// currently within a capture time window?
 	var isCaptureCooldown;			// currently taking a break from capturing?
 	var captureInterval;			// set interval for capturing
-	var oldImage;					// image to compare captured images against
-	var bestDiff;					// best (most significant) diff during a capture window
+	var oldImage;					// previous captured image to compare against
+	var bestDiff;					// most significant diff during a capture window
 
 	// reused elements and canvas contexts
 	var verdict, streamVideo, captureCanvas, captureContext, diffCanvas, diffContext,
@@ -69,14 +69,10 @@
 	}
 
 	function getCapture() {
-		if (isCaptureCooldown) {
-			return;
-		}
-
 		// capture from video
 		captureContext.drawImage(streamVideo, 0, 0, captureWidth, captureHeight);
 
-		// save as image
+		// create as image
 		var newImage = new Image();
 		newImage.onload = saveCapture;
 		newImage.src = captureCanvas.toDataURL();
@@ -84,33 +80,30 @@
 
 	function saveCapture() {
 		var newImage = this;
-		if (!oldImage) {
-			// don't have an old image to compare to, but next time we will
-			oldImage = newImage;
-			return;
-		}
+		if (oldImage) {
+			var diff = calculateDiff(oldImage, newImage);
 
-		var diff = calculateDiff(oldImage, newImage);
+			// show motion on page
+			motionContext.putImageData(diff.diffImgData, 0, 0);
 
-		// show motion on page
-		motionContext.putImageData(diff.diffImgData, 0, 0);
-
-		if (isCaptureWindow) {
-			if (diff.score > bestDiff.score) {
-				// this is our new best diff for this capture window
-				bestDiff = diff;
-			}
-		} else {
-			if (diff.score > scoreThreshold) {
-				// this capture is good enough to start a new capture window
-				bestDiff = diff;
-				isCaptureWindow = true;
-				setTimeout(commitBest, captureWindow);
-			} else {
-				// new capture not noteworthy
-				oldImage = newImage;
+			if (!isCaptureCooldown) {
+				if (isCaptureWindow) {
+					if (diff.score > bestDiff.score) {
+						// this is our new best diff for this capture window
+						bestDiff = diff;
+					}
+				} else {
+					if (diff.score > scoreThreshold) {
+						// this capture is good enough to start a new capture window
+						bestDiff = diff;
+						isCaptureWindow = true;
+						setTimeout(endCaptureWindow, captureWindow);
+					}
+				}
 			}
 		}
+
+		oldImage = newImage;
 	}
 
 	function calculateDiff(oldImage, newImage) {
@@ -137,24 +130,28 @@
 		}
 
 		return {
-			oldImage: oldImage,
 			newimage: newImage,
 			diffImgData: diffImgData,
 			score: score
 		};
 	}
 
-	function commitBest() {
-		upload();
-		isCaptureWindow = false;
+	function checkScore() {
 
-		oldImage = undefined;
+	}
+
+	function endCaptureWindow() {
+		upload();
+
+		isCaptureWindow = false;
 		bestDiff = undefined;
 
 		isCaptureCooldown = true;
-		setTimeout(function() {
-			isCaptureCooldown = false;
-		}, captureCooldown);
+		setTimeout(endCaptureCooldown, captureCooldown);
+	}
+
+	function endCaptureCooldown() {
+		isCaptureCooldown = false;
 	}
 
 	function upload() {
