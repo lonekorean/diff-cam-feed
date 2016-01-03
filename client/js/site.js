@@ -1,21 +1,21 @@
 (function() {
 	// config
-	var captureIntervalDelay = 100;	// time between captures, in ms
-	var captureWindow = 2000;		// time to consider best capture, in ms
-	var captureCooldown = 8000;		// time to chill after saving capture, in ms
+	var captureIntervalTime = 100;	// time between captures, in ms
+	var considerTime = 2000;		// time window to consider best capture, in ms
+	var chillTime = 8000;			// time to chill after committing, in ms
 	var captureWidth = 320;
 	var captureHeight = 240;
 	var diffWidth = 32;
 	var diffHeight = 24;
-	var pixelDiffThreshold = 32;	// min for a pixel to be considered different
-	var scoreThreshold = 4;			// min for an image to be considered different
+	var pixelDiffThreshold = 32;	// min for a pixel to be considered significant
+	var scoreThreshold = 4;			// min for an image to be considered significant
 
 	// shared
-	var isCaptureWindow;			// currently within a capture time window?
-	var isCaptureCooldown;			// currently taking a break from capturing?
-	var captureInterval;			// set interval for capturing
+	var captureInterval;
+	var isConsidering;				// currently considering best capture?
+	var isChilling;					// currently chilling after committing?
 	var oldImage;					// previous captured image to compare against
-	var bestDiff;					// most significant diff during a capture window
+	var bestDiff;					// most significant diff while considering
 
 	// reused elements and canvas contexts
 	var verdict, streamVideo, captureCanvas, captureContext, diffCanvas, diffContext,
@@ -61,48 +61,35 @@
 
 	function startStreamingVideo(stream) {
 		streamVideo.srcObject = stream;
-		captureInterval = self.setInterval(getCapture, captureIntervalDelay);
+		captureInterval = self.setInterval(capture, captureIntervalTime);
 	}
 
 	function displayError(error) {
 		console.log(error);
 	}
 
-	function getCapture() {
+	function capture() {
 		// capture from video
 		captureContext.drawImage(streamVideo, 0, 0, captureWidth, captureHeight);
 
 		// create as image
 		var newImage = new Image();
-		newImage.onload = saveCapture;
+		newImage.onload = checkImage;
 		newImage.src = captureCanvas.toDataURL();
 	}
 
-	function saveCapture() {
+	function checkImage() {
 		var newImage = this;
 		if (oldImage) {
 			var diff = calculateDiff(oldImage, newImage);
 
 			// show motion on page
-			motionContext.putImageData(diff.diffImgData, 0, 0);
+			motionContext.putImageData(diff.imageData, 0, 0);
 
-			if (!isCaptureCooldown) {
-				if (isCaptureWindow) {
-					if (diff.score > bestDiff.score) {
-						// this is our new best diff for this capture window
-						bestDiff = diff;
-					}
-				} else {
-					if (diff.score > scoreThreshold) {
-						// this capture is good enough to start a new capture window
-						bestDiff = diff;
-						isCaptureWindow = true;
-						setTimeout(endCaptureWindow, captureWindow);
-					}
-				}
+			if (!isChilling) {
+				saveBest(diff);
 			}
 		}
-
 		oldImage = newImage;
 	}
 
@@ -112,8 +99,9 @@
 		diffContext.drawImage(oldImage, 0, 0, diffWidth, diffHeight);
 		diffContext.drawImage(newImage, 0, 0, diffWidth, diffHeight);
 
-		var diffImgData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
-		var rgba = diffImgData.data;
+		// get pixel data
+		var imageData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
+		var rgba = imageData.data;
 
 		// score each pixel, adjust color for display
 		var score = 0;
@@ -130,31 +118,42 @@
 		}
 
 		return {
-			newimage: newImage,
-			diffImgData: diffImgData,
+			newImage: newImage,
+			imageData: imageData,
 			score: score
 		};
 	}
 
-	function checkScore() {
-
+	function saveBest(diff) {
+		if (isConsidering) {
+			if (diff.score > bestDiff.score) {
+				// this is the new best diff for this consideration time window
+				bestDiff = diff;
+			}
+		} else {
+			if (diff.score > scoreThreshold) {
+				// this diff is good enough to start a consideration time window
+				bestDiff = diff;
+				isConsidering = true;
+				setTimeout(stopConsidering, considerTime);
+			}
+		}
 	}
 
-	function endCaptureWindow() {
-		upload();
+	function stopConsidering() {
+		isConsidering = false;
+		commit(bestDiff.newImage);
 
-		isCaptureWindow = false;
 		bestDiff = undefined;
-
-		isCaptureCooldown = true;
-		setTimeout(endCaptureCooldown, captureCooldown);
+		isChilling = true;
+		setTimeout(stopChilling, chillTime);
 	}
 
-	function endCaptureCooldown() {
-		isCaptureCooldown = false;
+	function stopChilling() {
+		isChilling = false;
 	}
 
-	function upload() {
+	function commit() {
 		console.log('This is when uploading would happen...');
 	}
 
