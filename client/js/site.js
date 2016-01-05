@@ -1,30 +1,29 @@
-(function() {
+$(function() {
 	// config
 	var captureIntervalTime = 100;	// time between captures, in ms
 	var considerTime = 2000;		// time window to consider best capture, in ms
 	var chillTime = 8000;			// time to chill after committing, in ms
 	var captureWidth = 320;
 	var captureHeight = 240;
-	var diffWidth = 32;
-	var diffHeight = 24;
+	var diffWidth = 64;
+	var diffHeight = 48;
 	var pixelDiffThreshold = 32;	// min for a pixel to be considered significant
-	var scoreThreshold = 4;			// min for an image to be considered significant
+	var scoreThreshold = 8;			// min for an image to be considered significant
 
 	// shared
 	var captureInterval;
-	var isConsidering;				// currently considering best capture?
-	var isChilling;					// currently chilling after committing?
+	var isConsidering = false;		// currently considering best capture?
+	var isChilling = false;			// currently chilling after committing?
 	var oldImage;					// previous captured image to compare against
 	var bestDiff;					// most significant diff while considering
 
-	// reused elements and canvas contexts
-	var verdict, streamVideo, captureCanvas, captureContext, diffCanvas, diffContext,
+	var video, captureCanvas, captureContext, diffCanvas, diffContext,
 		motionCanvas, motionContext;
 
+	var $toggle = $('.toggle');
+
 	function init() {
-		// cache some elements
-		verdict = document.getElementById('verdict');
-		streamVideo = document.getElementById('stream');
+		video = $('.video')[0];
 
 		// create canvas for captures in memory
 		captureCanvas = document.createElement('canvas');
@@ -40,12 +39,22 @@
 		diffContext.globalCompositeOperation = 'difference';
 
 		// set up canvas on page for showing motion
-		motionCanvas = document.getElementById('motion');
+		motionCanvas = $('.motion')[0];
 		motionCanvas.width = diffWidth;
 		motionCanvas.height = diffHeight;
-		motionContext = motionCanvas.getContext('2d');		
+		motionContext = motionCanvas.getContext('2d');
 
-		requestCam();
+		$toggle.on('click', toggleStreaming);
+	}
+
+	function toggleStreaming() {
+		if (video.srcObject && video.srcObject.active) {
+			// stream exists, kill it
+			stopStreaming();
+		} else {
+			// stream doesn't exist, attempt to start
+			requestCam();
+		}
 	}
 
 	function requestCam() {
@@ -55,22 +64,32 @@
 		};
 
 		navigator.mediaDevices.getUserMedia(constraints)
-			.then(startStreamingVideo)
+			.then(startStreaming)
 			.catch(displayError);
 	}
 
-	function startStreamingVideo(stream) {
-		streamVideo.srcObject = stream;
-		captureInterval = self.setInterval(capture, captureIntervalTime);
+	function startStreaming(stream) {
+		video.srcObject = stream;
+		captureInterval = setInterval(capture, captureIntervalTime);
+		$toggle.text('Stop');
+	}
+
+	function stopStreaming() {
+		video.srcObject.getVideoTracks()[0].stop();
+		clearInterval(captureInterval);
+		$toggle.text('Start');
 	}
 
 	function displayError(error) {
 		console.log(error);
+		$toggle
+			.text('Denied')
+			.prop('disabled', true);
 	}
 
 	function capture() {
 		// capture from video
-		captureContext.drawImage(streamVideo, 0, 0, captureWidth, captureHeight);
+		captureContext.drawImage(video, 0, 0, captureWidth, captureHeight);
 
 		// create as image
 		var newImage = new Image();
@@ -159,4 +178,4 @@
 
 	// kick things off
 	init();
-})();
+});

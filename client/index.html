@@ -9,23 +9,33 @@
 		<link href="css/site.css" rel="stylesheet">
 	</head>
 	<body>
-		<h1>Diff Cam</h1>
-		<span id="verdict"></span>
+		<header>
+			<h1>Diff Cam</h1>
+			<button class="toggle">Start</button>
+		</header>
 
-		<div>
+		<section>
 			<figure>
-				<video id="stream" autoplay></video>
+				<video class="video" autoplay></video>
 				<figcaption>Live Stream</figcaption>
 			</figure>
 			<figure>
-				<canvas id="motion"></canvas>
+				<canvas class="motion"></canvas>
 				<figcaption>Motion Detection</figcaption>
-			</figure>
-		</div>
+			</figure>			
+		</section>
+
+		<section>
+			<div class="progress"></div>
+			<div class="status"></div>
+		</section>
+
+		<section>
+			<div class="history"></div>
+		</section>
 
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 		<script src="js/vendor/adapter.js"></script>
-
 		<script src="js/site.js"></script>
 	</body>
 </html>
