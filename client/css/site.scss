@@ -7,3 +7,20 @@
 .motion {
 	image-rendering: pixelated;
 }
+
+.history {
+	&::after {
+		content: '';
+		display: block;
+		clear: both;
+	}
+
+	figure {
+		float: left;
+	}
+
+	img {
+		width: 240px;
+		height: 180px;
+	}
+}

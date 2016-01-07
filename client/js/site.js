@@ -2,9 +2,9 @@ $(function() {
 	// config
 	var captureIntervalTime = 100;	// time between captures, in ms
 	var considerTime = 2000;		// time window to consider best capture, in ms
-	var chillTime = 8000;			// time to chill after committing, in ms
-	var captureWidth = 320;
-	var captureHeight = 240;
+	var chillTime = 2000;			// time to chill after committing, in ms
+	var captureWidth = 640;
+	var captureHeight = 480;
 	var diffWidth = 64;
 	var diffHeight = 48;
 	var pixelDiffThreshold = 32;	// min for a pixel to be considered significant
@@ -21,6 +21,9 @@ $(function() {
 		motionCanvas, motionContext;
 
 	var $toggle = $('.toggle');
+	var $history = $('.history');
+
+	var $historyItemTemplate = $('#history-item-template');
 
 	function init() {
 		video = $('.video')[0];
@@ -161,7 +164,7 @@ $(function() {
 
 	function stopConsidering() {
 		isConsidering = false;
-		commit(bestDiff.newImage);
+		commit(bestDiff);
 
 		bestDiff = undefined;
 		isChilling = true;
@@ -172,8 +175,22 @@ $(function() {
 		isChilling = false;
 	}
 
-	function commit() {
-		console.log('This is when uploading would happen...');
+	function commit(diff) {
+		// prep values
+		var src = diff.newImage.src;
+		var time = new Date().toLocaleTimeString();
+		var caption = time.toLowerCase() + ' (score: ' + diff.score + ')';
+
+		// load html from template
+		var html = $historyItemTemplate.html();
+		var $newHistoryItem = $(html);
+
+		// set values and add to page
+		$newHistoryItem.find('img').attr('src', src);
+		$newHistoryItem.find('figcaption').text(caption);
+		$history.prepend($newHistoryItem);
+
+		// TODO: and then upload
 	}
 
 	// kick things off
