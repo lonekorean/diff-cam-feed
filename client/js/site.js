@@ -7,8 +7,8 @@ $(function() {
 	var captureHeight = 480;
 	var diffWidth = 64;
 	var diffHeight = 48;
-	var pixelDiffThreshold = 32;	// min for a pixel to be considered significant
-	var scoreThreshold = 8;			// min for an image to be considered significant
+	var pixelDiffThreshold = 16;	// min for a pixel to be considered significant
+	var scoreThreshold = 4;			// min for an image to be considered significant
 
 	// shared
 	var captureInterval;
