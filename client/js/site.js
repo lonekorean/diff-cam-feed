@@ -12,8 +12,9 @@ $(function() {
 
 	// shared
 	var captureInterval;
-	var isConsidering = false;		// currently considering best capture?
-	var isChilling = false;			// currently chilling after committing?
+	var stopConsideringTimeout;
+	var stopChillingTimeout;
+	var status = 'disabled';		// disabled, watching, considering, chilling
 	var oldImage;					// previous captured image to compare against
 	var bestDiff;					// most significant diff while considering
 
@@ -51,12 +52,10 @@ $(function() {
 	}
 
 	function toggleStreaming() {
-		if (video.srcObject && video.srcObject.active) {
-			// stream exists, kill it
-			stopStreaming();
-		} else {
-			// stream doesn't exist, attempt to start
+		if (status === 'disabled') {
 			requestCam();
+		} else {
+			stopStreaming();
 		}
 	}
 
@@ -72,14 +71,21 @@ $(function() {
 	}
 
 	function startStreaming(stream) {
+		status = 'watching';
 		video.srcObject = stream;
 		captureInterval = setInterval(capture, captureIntervalTime);
 		$toggle.text('Stop');
 	}
 
 	function stopStreaming() {
-		video.srcObject.getVideoTracks()[0].stop();
+		// kill time-delayed actions
 		clearInterval(captureInterval);
+		clearTimeout(stopConsideringTimeout);
+		clearTimeout(stopChillingTimeout);
+		status = 'disabled';
+		bestDiff = undefined;
+
+		video.srcObject.getVideoTracks()[0].stop();
 		$toggle.text('Start');
 	}
 
@@ -101,18 +107,27 @@ $(function() {
 	}
 
 	function checkImage() {
-		var newImage = this;
-		if (oldImage) {
-			var diff = calculateDiff(oldImage, newImage);
+		// safety check (user could stop stream during image load)
+		if (status !== 'disabled') {
+			var newImage = this;
+			if (oldImage) {
+				var diff = calculateDiff(oldImage, newImage);
 
-			// show motion on page
-			motionContext.putImageData(diff.imageData, 0, 0);
+				// show motion on page
+				motionContext.putImageData(diff.imageData, 0, 0);
 
-			if (!isChilling) {
-				saveBest(diff);
+				if (status === 'watching' && diff.score > scoreThreshold) {
+					// this diff is good enough to start a consideration time window
+					status = 'considering';
+					bestDiff = diff;
+					stopConsideringTimeout = setTimeout(stopConsidering, considerTime);
+				} else if (status === 'considering' && diff.score > bestDiff.score) {
+					// this is the new best diff for this consideration time window
+					bestDiff = diff;
+				}
 			}
+			oldImage = newImage;
 		}
-		oldImage = newImage;
 	}
 
 	function calculateDiff(oldImage, newImage) {
@@ -146,33 +161,16 @@ $(function() {
 		};
 	}
 
-	function saveBest(diff) {
-		if (isConsidering) {
-			if (diff.score > bestDiff.score) {
-				// this is the new best diff for this consideration time window
-				bestDiff = diff;
-			}
-		} else {
-			if (diff.score > scoreThreshold) {
-				// this diff is good enough to start a consideration time window
-				bestDiff = diff;
-				isConsidering = true;
-				setTimeout(stopConsidering, considerTime);
-			}
-		}
-	}
-
 	function stopConsidering() {
-		isConsidering = false;
 		commit(bestDiff);
-
 		bestDiff = undefined;
-		isChilling = true;
-		setTimeout(stopChilling, chillTime);
+
+		status = 'chilling';
+		stopChillingTimeout = setTimeout(stopChilling, chillTime);
 	}
 
 	function stopChilling() {
-		isChilling = false;
+		status = 'watching';
 	}
 
 	function commit(diff) {
