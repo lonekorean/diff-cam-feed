@@ -6,13 +6,13 @@
 
 		<title>Diff Cam</title>
 
-		<link href="css/site.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="css/site.css">
 	</head>
 	<body>
-		<header>
-			<h1>Diff Cam</h1>
-			<button class="toggle">Start</button>
-		</header>
+		<section>
+			<button class="toggle start"></button>
+		</section>
 
 		<section>
 			<figure>
@@ -41,7 +41,10 @@
 		<template id="history-item-template">
 			<figure>
 				<img>
-				<figcaption></figcaption>
+				<figcaption>
+					<span class="time"></span>
+					<span class="score"></span>
+				</figcaption>
 			</figure>
 		</template>
 	</body>

@@ -1,5 +1,9 @@
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);
 
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+
 body {
 	margin: 0;
 	padding: 20px 40px;
@@ -22,17 +26,38 @@ h1 {
 }
 
 .toggle {
-	float: right;
-	padding: 10px 20px;
-	border: 4px solid #ccc;
-	color: #fff;
-	background-color: #666;
-	font-size: 1.25rem;
+	display: inline-block;
+	padding: 0;
+	border: none;
+	background-color: transparent;
+	font-size: 4rem;
+	line-height: 1;
 	cursor: pointer;
 	appearance: none;
+
+	&:focus {
+		outline: none; // TODO: not this
+	}
+
+	&::before {
+		content: '\f056'; // dash
+		display: block;
+		color: #999;
+		font-family: 'FontAwesome';
+	}
+
+	&.start::before {
+		content: '\f144'; // play
+		color: #090;
+	}
+
+	&.stop::before {
+		content: '\f28d'; // stop
+		color: #900;
+	}
 }
 
-section {
+section:not(:first-child) {
 	margin-top: 20px;
 }
 
@@ -60,6 +85,9 @@ figure {
 
 	figure {
 		float: left;
+		padding: 10px;
+		border-radius: 5px;
+		background-color: #eee;
 
 		&:first-child {
 			animation: entrance 1s ease-out;
@@ -69,6 +97,14 @@ figure {
 	img {
 		width: 240px;
 		height: 180px;
+	}
+
+	figcaption {
+		padding-top: 5px;
+	}
+
+	.score {
+		float: right;
 	}
 }
 

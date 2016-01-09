@@ -2,20 +2,22 @@ $(function() {
 	// config
 	var captureIntervalTime = 100;	// time between captures, in ms
 	var considerTime = 2000;		// time window to consider best capture, in ms
-	var chillTime = 2000;			// time to chill after committing, in ms
+	var chillTime = 4000;			// time to chill after committing, in ms
 	var captureWidth = 640;
 	var captureHeight = 480;
 	var diffWidth = 64;
 	var diffHeight = 48;
-	var pixelDiffThreshold = 16;	// min for a pixel to be considered significant
-	var scoreThreshold = 4;			// min for an image to be considered significant
+	var pixelDiffThreshold = 32;	// min for a pixel to be considered significant
+	var scoreThreshold = 8;			// min for an image to be considered significant
+	var historyMax = 4;				// max number of past captures to show on page
 
 	// shared
 	var captureInterval;
 	var stopConsideringTimeout;
 	var stopChillingTimeout;
 	var status = 'disabled';		// disabled, watching, considering, chilling
-	var oldImage;					// previous captured image to compare against
+	var newImage;					// newly capture image
+	var oldImage;					// previously captured image to compare against
 	var bestDiff;					// most significant diff while considering
 
 	var video, captureCanvas, captureContext, diffCanvas, diffContext,
@@ -74,7 +76,10 @@ $(function() {
 		status = 'watching';
 		video.srcObject = stream;
 		captureInterval = setInterval(capture, captureIntervalTime);
-		$toggle.text('Stop');
+
+		$toggle
+			.removeClass('start')
+			.addClass('stop');
 	}
 
 	function stopStreaming() {
@@ -86,13 +91,18 @@ $(function() {
 		bestDiff = undefined;
 
 		video.srcObject.getVideoTracks()[0].stop();
-		$toggle.text('Start');
+		video.src = '';
+		motionContext.clearRect(0, 0, diffWidth, diffHeight);
+
+		$toggle
+			.removeClass('stop')
+			.addClass('start');
 	}
 
 	function displayError(error) {
 		console.log(error);
 		$toggle
-			.text('Denied')
+			.removeClass('start stop')
 			.prop('disabled', true);
 	}
 
@@ -101,9 +111,10 @@ $(function() {
 		captureContext.drawImage(video, 0, 0, captureWidth, captureHeight);
 
 		// create as image
-		var newImage = new Image();
+		newImage = new Image();
 		newImage.onload = checkImage;
 		newImage.src = captureCanvas.toDataURL();
+
 	}
 
 	function checkImage() {
@@ -176,8 +187,8 @@ $(function() {
 	function commit(diff) {
 		// prep values
 		var src = diff.newImage.src;
-		var time = new Date().toLocaleTimeString();
-		var caption = time.toLowerCase() + ' (score: ' + diff.score + ')';
+		var time = new Date().toLocaleTimeString().toLowerCase();
+		var score = 'score: ' + diff.score + '';
 
 		// load html from template
 		var html = $historyItemTemplate.html();
@@ -185,8 +196,12 @@ $(function() {
 
 		// set values and add to page
 		$newHistoryItem.find('img').attr('src', src);
-		$newHistoryItem.find('figcaption').text(caption);
+		$newHistoryItem.find('.time').text(time);
+		$newHistoryItem.find('.score').text(score);
 		$history.prepend($newHistoryItem);
+
+		// trim
+		$('.history figure').slice(historyMax).remove();
 
 		// TODO: and then upload
 	}
