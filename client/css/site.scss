@@ -81,6 +81,41 @@ label {
 	left: -9999px;
 }
 
+.status {
+	margin-bottom: 5px;
+	font-weight: bold;
+	font-size: 1rem;
+	text-transform: capitalize;
+}
+
+.progress {
+	width: 100%;
+	height: 10px;
+	border-radius: 5px;
+	background-color: #ccc;
+	overflow: hidden;
+	transform: translateZ(0); // fix so border radius clips properly
+}
+
+.meter {
+	width: 100%;
+	height: 100%;
+	transform-origin: 0 0;
+	animation-timing-function: linear;
+}
+
+.meter-considering {
+	transform: scaleX(1);
+	background-color: #090;
+	animation-name: fill-meter;
+}
+
+.meter-chilling {
+	transform: scaleX(0);
+	background-color: #009;
+	animation-name: empty-meter;
+}
+
 figure {
 	float: left;
 	margin: 0 10px 10px 0;
@@ -132,5 +167,17 @@ figure {
 	0% {
 		opacity: 0;
 		transform: translateY(-25%);
+	}
+}
+
+@keyframes fill-meter {
+	0% {
+		transform: scaleX(0);
+	}
+}
+
+@keyframes empty-meter {
+	0% {
+		transform: scaleX(1);
 	}
 }

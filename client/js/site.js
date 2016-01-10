@@ -15,7 +15,7 @@ $(function() {
 	var captureInterval;
 	var stopConsideringTimeout;
 	var stopChillingTimeout;
-	var status = 'disabled';		// disabled, watching, considering, chilling
+	var status;						// disabled, watching, considering, chilling
 	var newImage;					// newly capture image
 	var oldImage;					// previously captured image to compare against
 	var bestDiff;					// most significant diff while considering
@@ -25,6 +25,8 @@ $(function() {
 
 	var $toggle = $('.toggle');
 	var $tweaks = $('.tweaks');
+	var $status = $('.status');
+	var $meter = $('.meter');
 	var $history = $('.history');
 
 	var $pixelDiffThreshold = $('#pixel-diff-threshold');
@@ -32,6 +34,7 @@ $(function() {
 	var $historyItemTemplate = $('#history-item-template');
 
 	function init() {
+		setStatus('disabled');
 		setCanvases();
 		setTweakInputs();
 
@@ -39,6 +42,27 @@ $(function() {
 
 		$toggle.on('click', toggleStreaming);
 		$tweaks.on('submit', getTweakInputs);
+	}
+
+	function setStatus(newStatus) {
+		$meter.removeClass('meter-' + status);
+
+		status = newStatus;
+		switch (status) {
+			case 'disabled':
+			case 'watching':
+				$meter.css('animation-duration', '');
+				break;
+			case 'considering':
+				$meter.css('animation-duration', considerTime + 'ms');
+				break;
+			case 'chilling':
+				$meter.css('animation-duration', chillTime + 'ms');
+				break;				
+		}
+
+		$status.text(status);
+		$meter.addClass('meter-' + status);
 	}
 
 	function setCanvases() {
@@ -93,7 +117,7 @@ $(function() {
 	}
 
 	function startStreaming(stream) {
-		status = 'watching';
+		setStatus('watching');
 		video.srcObject = stream;
 		captureInterval = setInterval(capture, captureIntervalTime);
 
@@ -107,7 +131,7 @@ $(function() {
 		clearInterval(captureInterval);
 		clearTimeout(stopConsideringTimeout);
 		clearTimeout(stopChillingTimeout);
-		status = 'disabled';
+		setStatus('disabled');
 		bestDiff = undefined;
 
 		video.srcObject.getVideoTracks()[0].stop();
@@ -149,7 +173,7 @@ $(function() {
 
 				if (status === 'watching' && diff.score > scoreThreshold) {
 					// this diff is good enough to start a consideration time window
-					status = 'considering';
+					setStatus('considering');
 					bestDiff = diff;
 					stopConsideringTimeout = setTimeout(stopConsidering, considerTime);
 				} else if (status === 'considering' && diff.score > bestDiff.score) {
@@ -196,12 +220,12 @@ $(function() {
 		commit(bestDiff);
 		bestDiff = undefined;
 
-		status = 'chilling';
+		setStatus('chilling');
 		stopChillingTimeout = setTimeout(stopChilling, chillTime);
 	}
 
 	function stopChilling() {
-		status = 'watching';
+		setStatus('watching');
 	}
 
 	function commit(diff) {
