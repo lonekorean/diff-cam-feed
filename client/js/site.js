@@ -24,13 +24,24 @@ $(function() {
 		motionCanvas, motionContext;
 
 	var $toggle = $('.toggle');
+	var $tweaks = $('.tweaks');
 	var $history = $('.history');
 
+	var $pixelDiffThreshold = $('#pixel-diff-threshold');
+	var $scoreThreshold = $('#score-threshold');
 	var $historyItemTemplate = $('#history-item-template');
 
 	function init() {
+		setCanvases();
+		setTweakInputs();
+
 		video = $('.video')[0];
 
+		$toggle.on('click', toggleStreaming);
+		$tweaks.on('submit', getTweakInputs);
+	}
+
+	function setCanvases() {
 		// create canvas for captures in memory
 		captureCanvas = document.createElement('canvas');
 		captureCanvas.width = captureWidth;
@@ -48,9 +59,18 @@ $(function() {
 		motionCanvas = $('.motion')[0];
 		motionCanvas.width = diffWidth;
 		motionCanvas.height = diffHeight;
-		motionContext = motionCanvas.getContext('2d');
+		motionContext = motionCanvas.getContext('2d');		
+	}
 
-		$toggle.on('click', toggleStreaming);
+	function setTweakInputs() {
+		$pixelDiffThreshold.val(pixelDiffThreshold);
+		$scoreThreshold.val(scoreThreshold);
+	}
+
+	function getTweakInputs(e) {
+		e.preventDefault();
+		pixelDiffThreshold = $pixelDiffThreshold.val();
+		scoreThreshold = $scoreThreshold.val();
 	}
 
 	function toggleStreaming() {
