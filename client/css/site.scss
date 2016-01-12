@@ -102,44 +102,54 @@ label {
 	height: 100%;
 	transform-origin: 0 0;
 	animation-timing-function: linear;
+
+	&.considering {
+		transform: scaleX(1);
+		background-color: #090;
+		animation-name: fill-meter;
+	}
+
+	&.chilling {
+		transform: scaleX(0);
+		background-color: #009;
+		animation-name: empty-meter;
+	}
 }
 
-.meter-considering {
-	transform: scaleX(1);
-	background-color: #090;
-	animation-name: fill-meter;
-}
+.feedback {
+	figure {
+		float: left;
+		margin: 0 0 10px 0;
+	}
 
-.meter-chilling {
-	transform: scaleX(0);
-	background-color: #009;
-	animation-name: empty-meter;
-}
+	.video, .motion {
+		width: 320px;
+		height: 240px;
+		background-color: #000;
+	}
 
-figure {
-	float: left;
-	margin: 0 10px 10px 0;
-}
+	.video {
+		margin-right: 20px;
+	}
 
-.video, .motion {
-	width: 320px;
-	height: 240px;
-	background-color: #000;
-}
+	.motion {
+		image-rendering: pixelated;
+	}
 
-.motion {
-	image-rendering: pixelated;
+	figcaption {
+		padding-top: 5px;
+		font-weight: bold;
+	}
+
+	.motion-score {
+		float: right;
+	}
 }
 
 .history {
-	&::after {
-		content: '';
-		display: block;
-		clear: both;
-	}
-
 	figure {
 		float: left;
+		margin: 0 0 10px 0;
 		padding: 10px;
 		border-radius: 5px;
 		background-color: #eee;
@@ -147,11 +157,15 @@ figure {
 		&:first-child {
 			animation: entrance 1s ease-out;
 		}
+
+		&:not(:last-child) {
+			margin-right: 10px;
+		}
 	}
 
 	img {
-		width: 240px;
-		height: 180px;
+		width: 160px;
+		height: 120px;
 	}
 
 	figcaption {

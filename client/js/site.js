@@ -25,6 +25,7 @@ $(function() {
 
 	var $toggle = $('.toggle');
 	var $tweaks = $('.tweaks');
+	var $motionScore = $('.motion-score');
 	var $status = $('.status');
 	var $meter = $('.meter');
 	var $history = $('.history');
@@ -45,7 +46,7 @@ $(function() {
 	}
 
 	function setStatus(newStatus) {
-		$meter.removeClass('meter-' + status);
+		$meter.removeClass(status);
 
 		status = newStatus;
 		switch (status) {
@@ -62,7 +63,7 @@ $(function() {
 		}
 
 		$status.text(status);
-		$meter.addClass('meter-' + status);
+		$meter.addClass(status);
 	}
 
 	function setCanvases() {
@@ -137,6 +138,7 @@ $(function() {
 		video.srcObject.getVideoTracks()[0].stop();
 		video.src = '';
 		motionContext.clearRect(0, 0, diffWidth, diffHeight);
+		$motionScore.text('');
 
 		$toggle
 			.removeClass('stop')
@@ -170,6 +172,7 @@ $(function() {
 
 				// show motion on page
 				motionContext.putImageData(diff.imageData, 0, 0);
+				$motionScore.text(diff.score);
 
 				if (status === 'watching' && diff.score > scoreThreshold) {
 					// this diff is good enough to start a consideration time window
@@ -232,7 +235,7 @@ $(function() {
 		// prep values
 		var src = diff.newImage.src;
 		var time = new Date().toLocaleTimeString().toLowerCase();
-		var score = 'score: ' + diff.score + '';
+		var score = diff.score;
 
 		// load html from template
 		var html = $historyItemTemplate.html();
