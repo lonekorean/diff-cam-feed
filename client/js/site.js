@@ -250,7 +250,10 @@ $(function() {
 		// trim
 		$('.history figure').slice(historyMax).remove();
 
-		// TODO: and then upload
+		$.post('/upload', { score: 41 })
+			.always(function() {
+				console.log('uploaded');
+			});
 	}
 
 	// kick things off
