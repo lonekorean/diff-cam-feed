@@ -12,6 +12,8 @@
   "dependencies": {
     "body-parser": "^1.14.2",
     "express": "^4.13.3",
+    "fs": "0.0.2",
+    "twitter": "^1.2.5",
     "webrtc-adapter-test": "^0.2.5"
   },
   "devDependencies": {

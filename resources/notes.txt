@@ -2,3 +2,6 @@
   - npm install -g gulp
   - http://stackoverflow.com/questions/22224831/no-command-gulp-found-after-installation
 
+- Put env.js in root folder
+
+- To run: node dist/server/app.js

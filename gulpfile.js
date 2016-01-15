@@ -14,8 +14,8 @@ var sources = {
 	'server': {
 		'js': ['./server/**/*.js']
 	},
-	'tools': {
-		'js': ['gulpfile.js', 'package.json']
+	'config': {
+		'js': ['env.js', 'gulpfile.js', 'package.json']
 	}
 };
 
@@ -57,15 +57,15 @@ gulp.task('server-js', function() {
 		.pipe(gulp.dest('./dist/server'));
 });
 
-// build tools javascript
-gulp.task('tools-js', function() {
-	gulp.src(sources.tools.js)
+// configuration javascript
+gulp.task('config-js', function() {
+	gulp.src(sources.config.js)
 		.pipe(jshint(jshintConfig))
 		.pipe(jshint.reporter(jshintStylish));
 });
 
 // build site
-gulp.task('build', ['client-static', 'client-css', 'client-js', 'server-js', 'tools-js']);
+gulp.task('build', ['client-static', 'client-css', 'client-js', 'server-js', 'config-js']);
 
 // build site and watch for changes
 gulp.task('watch', ['build'], function() {
@@ -73,5 +73,5 @@ gulp.task('watch', ['build'], function() {
 	gulp.watch(sources.client.css, ['client-css']);
 	gulp.watch(sources.client.js, ['client-js']);
 	gulp.watch(sources.server.js, ['server-js']);
-	gulp.watch(sources.tools.js, ['tools-js']);
+	gulp.watch(sources.config.js, ['config-js']);
 });

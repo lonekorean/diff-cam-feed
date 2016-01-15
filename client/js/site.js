@@ -250,7 +250,13 @@ $(function() {
 		// trim
 		$('.history figure').slice(historyMax).remove();
 
-		$.post('/upload', { score: 41 })
+		$.ajax({
+			type: 'POST',
+			url: '/upload',
+			data: {
+				imageDataURL: diff.newImage.src
+			}
+		})
 			.always(function() {
 				console.log('uploaded');
 			});

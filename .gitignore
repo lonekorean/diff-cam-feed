@@ -12,3 +12,6 @@ Thumbs.db
 
 # Ignore build generated stuff
 dist
+
+# Ignore env.js (sensitive info)
+env.js
