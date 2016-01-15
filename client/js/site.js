@@ -1,8 +1,8 @@
 $(function() {
 	// config
 	var captureIntervalTime = 100;	// time between captures, in ms
-	var considerTime = 2000;		// time window to consider best capture, in ms
-	var chillTime = 4000;			// time to chill after committing, in ms
+	var considerTime = 4000;		// time window to consider best capture, in ms
+	var chillTime = 16000;			// time to chill after committing, in ms
 	var captureWidth = 640;
 	var captureHeight = 480;
 	var diffWidth = 64;
@@ -254,7 +254,8 @@ $(function() {
 			type: 'POST',
 			url: '/upload',
 			data: {
-				imageDataURL: diff.newImage.src
+				score: diff.score,
+				dataURL: diff.newImage.src.replace('data:image/png;base64,', '')
 			}
 		})
 			.always(function() {
