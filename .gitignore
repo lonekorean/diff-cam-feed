@@ -1,17 +1,6 @@
-# Ignore dependency directory
-node_modules
-
-# Ignore .env configuration files
-.env
-
-# Ignore .DS_Store files on OS X
-.DS_Store
-
-# Ignore Thumbs.db files on Windows
-Thumbs.db
-
-# Ignore build generated stuff
-dist
-
-# Ignore env.js (sensitive info)
+/dist
+/node_modules
+*.log
 env.js
+.DS_Store
+Thumbs.db

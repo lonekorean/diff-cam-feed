@@ -1,42 +1,42 @@
 var bodyParser = require('body-parser');
 var express = require('express');
+var expressSession = require('express-session');
 var passport = require('passport');
-var Strategy = require('passport-twitter').Strategy;
+var passportTwitter = require('passport-twitter');
 
 module.exports = function(app) {
-	passport.use(new Strategy({
-	    consumerKey: process.env.TWITTER_CONSUMER_KEY,
-	    consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
-	    callbackURL: 'http://127.0.0.1:3000/login/twitter/return'
-	}, function(token, tokenSecret, profile, cb) {
-		console.log(token, tokenSecret);
-		return cb(null, profile);
+	var twitterOptions = {
+		consumerKey: process.env.TWITTER_CONSUMER_KEY,
+		consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
+		callbackURL: '/twitter/return'
+	};
+	passport.use(new passportTwitter.Strategy(twitterOptions, function(tokenKey, tokenSecret, profile, done) {
+		var json = profile._json;
+		var user = {
+			name: json.name,
+			handle: json.screen_name,
+			image: json.profile_image_url_https,
+			tokenKey: tokenKey,
+			tokenSecret: tokenSecret
+		};
+		return done(null, user);
 	}));
 
-	passport.serializeUser(function(user, cb) {
-		cb(null, user);
+	passport.serializeUser(function(user, done) {
+		done(null, user);
 	});
 
-	passport.deserializeUser(function(obj, cb) {
-		cb(null, obj);
+	passport.deserializeUser(function(obj, done) {
+		done(null, obj);
 	});
 
-	app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+	app.use(expressSession({ secret: process.env.SESSION_SECRET, resave: true, saveUninitialized: true }));
 	app.use(passport.initialize());
 	app.use(passport.session());
-
 	app.use(bodyParser.json({ limit: '2mb' }));
 	app.use(bodyParser.urlencoded({ extended: false, limit: '2mb' }));
 
 	app.use(express.static('./dist/client'));
-
 	app.use('/upload', require('./routes/upload'));
-
-	app.get('/login/twitter', passport.authenticate('twitter'));
-
-	app.get('/login/twitter/return', passport.authenticate('twitter', { failureRedirect: '/login' }),
-		function(req, res) {
-			res.redirect('/');
-	  	});
-
+	app.use('/twitter', require('./routes/twitter'));
 };

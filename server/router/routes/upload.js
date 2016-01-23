@@ -26,7 +26,7 @@ router.post('/', function(req, res) {
 				if (error) {
 					console.log('Error updating status:', error);
 				} else {
-					console.log('Capture uploaded');
+					console.log('Status update successful');
 				}
 			});
 		}
