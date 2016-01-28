@@ -18,10 +18,21 @@ header, section, .tweaks {
 	}
 }
 
+header {
+	padding-bottom: 20px;
+	border-bottom: 2px dotted #ccc;
+}
+
 h1 {
-	float: left;
 	margin: 0;
-	font-size: 3rem;
+	font-size: 1.25rem;
+	font-weight: normal;
+}
+
+.profile-image {
+	width: 30px;
+	height: 30px;
+	vertical-align: -.5rem;
 }
 
 section:not(:first-child) {

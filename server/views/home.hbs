@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>Diff Cam</title>
+
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="css/site.css">
+	</head>
+	<body>
+		{{#unless user}}
+			<h1>Sign in to upload captures images to your feed</h1>
+			<a href="/twitter/login"><img src="images/sign-in-with-twitter.png" alt="Sign in with Twitter"></a>
+		{{else}}
+			<header>
+				<h1>
+					<img src="{{user.image}}" class="profile-image">
+					Signed in as <strong>{{user.name}}</strong>
+				</h1>
+			</header>
+			<section>
+				<button class="toggle start"></button>
+				<form class="tweaks">
+					<label>
+						Pixel Diff Threshold
+						<input id="pixel-diff-threshold" type="number" min="0" max="255">
+					</label>
+					<label>
+						Score Threshold
+						<input id="score-threshold" type="number" min="0">
+					</label>
+
+					<input type="submit" tab-index="-1" class="submit-tweaks">
+				</form>
+			</section>
+
+			<section>
+				<div class="status"></div>
+				<div class="progress">
+					<div class="meter"></div>
+				</div>
+			</section>
+
+			<section class="feedback">
+				<figure>
+					<video class="video" autoplay></video>
+					<figcaption>Live Stream</figcaption>
+				</figure>
+				<figure>
+					<canvas class="motion"></canvas>
+					<figcaption>
+						Motion Heatmap
+						<span class="motion-score"></span>
+					</figcaption>
+				</figure>
+			</section>
+
+			<section class="history">
+			</section>
+		{{/unless}}
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		<script src="js/vendor/adapter.js"></script>
+		<script src="js/site.js"></script>
+
+		<template id="history-item-template">
+			<figure>
+				<img>
+				<figcaption>
+					<span class="time"></span>
+					<span class="score"></span>
+				</figcaption>
+			</figure>
+		</template>
+	</body>
+</html>
