@@ -59,7 +59,7 @@ $(function() {
 				break;
 			case 'chilling':
 				$meter.css('animation-duration', chillTime + 'ms');
-				break;				
+				break;
 		}
 
 		$status.text(status);
@@ -84,7 +84,7 @@ $(function() {
 		motionCanvas = $('.motion')[0];
 		motionCanvas.width = diffWidth;
 		motionCanvas.height = diffHeight;
-		motionContext = motionCanvas.getContext('2d');		
+		motionContext = motionCanvas.getContext('2d');
 	}
 
 	function setTweakInputs() {
@@ -257,10 +257,7 @@ $(function() {
 				score: diff.score,
 				dataURL: diff.newImage.src.replace('data:image/png;base64,', '')
 			}
-		})
-			.always(function() {
-				console.log('uploaded');
-			});
+		});
 	}
 
 	// kick things off
