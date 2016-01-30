@@ -15,7 +15,7 @@ a {
 }
 
 header, section, .tweaks {
-	max-width: 660px;
+	max-width: 532px;
 
 	&::after {
 		content: '';
@@ -148,8 +148,8 @@ label {
 	}
 
 	.video, .motion {
-		width: 320px;
-		height: 240px;
+		width: 256px;
+		height: 192px;
 		background-color: #000;
 	}
 
@@ -175,8 +175,7 @@ label {
 	figure {
 		float: left;
 		margin: 0 0 10px 0;
-		padding: 10px;
-		border-radius: 5px;
+		padding: 5px;
 		background-color: #eee;
 
 		&:first-child {

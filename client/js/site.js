@@ -3,13 +3,13 @@ $(function() {
 	var captureIntervalTime = 100;	// time between captures, in ms
 	var considerTime = 4000;		// time window to consider best capture, in ms
 	var chillTime = 16000;			// time to chill after committing, in ms
-	var captureWidth = 640;
-	var captureHeight = 480;
+	var captureWidth = 512;
+	var captureHeight = 384;
 	var diffWidth = 64;
 	var diffHeight = 48;
 	var pixelDiffThreshold = 32;	// min for a pixel to be considered significant
 	var scoreThreshold = 8;			// min for an image to be considered significant
-	var historyMax = 4;				// max number of past captures to show on page
+	var historyMax = 3;				// max number of past captures to show on page
 
 	// shared
 	var captureInterval;
