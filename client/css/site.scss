@@ -10,7 +10,13 @@ body {
 	font: 14px/1 'Open Sans', sans-serif;
 }
 
+a {
+	color: #090;
+}
+
 header, section, .tweaks {
+	max-width: 660px;
+
 	&::after {
 		content: '';
 		display: block;
@@ -24,12 +30,20 @@ header {
 }
 
 h1 {
+	display: inline-block;
 	margin: 0;
 	font-size: 1.25rem;
 	font-weight: normal;
 }
 
+.twitter-button {
+	display: inline-block;
+	margin-top: 15px;
+}
+
 .profile-image {
+	display: inline-block;
+	margin-right: 5px;
 	width: 30px;
 	height: 30px;
 	vertical-align: -.5rem;
