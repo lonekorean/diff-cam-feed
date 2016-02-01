@@ -160,13 +160,14 @@ $(function() {
 		newImage = new Image();
 		newImage.onload = checkImage;
 		newImage.src = captureCanvas.toDataURL();
-
 	}
 
 	function checkImage() {
+		var newImage = this;
+		newImage.onload = null;
+
 		// safety check (user could stop stream during image load)
 		if (status !== 'disabled') {
-			var newImage = this;
 			if (oldImage) {
 				var diff = calculateDiff(oldImage, newImage);
 
@@ -183,7 +184,11 @@ $(function() {
 					// this is the new best diff for this consideration time window
 					bestDiff = diff;
 				}
+
+				// fixes nasty memory leak
+				oldImage.src = '';
 			}
+
 			oldImage = newImage;
 		}
 	}
@@ -213,7 +218,7 @@ $(function() {
 		}
 
 		return {
-			newImage: newImage,
+			newImageSrc: newImage.src,
 			imageData: imageData,
 			score: score
 		};
@@ -233,7 +238,7 @@ $(function() {
 
 	function commit(diff) {
 		// prep values
-		var src = diff.newImage.src;
+		var src = diff.newImageSrc;
 		var time = new Date().toLocaleTimeString().toLowerCase();
 		var score = diff.score;
 
@@ -255,9 +260,10 @@ $(function() {
 			url: '/upload',
 			data: {
 				score: diff.score,
-				dataURL: diff.newImage.src.replace('data:image/png;base64,', '')
+				dataURL: diff.newImageSrc.replace('data:image/png;base64,', '')
 			}
 		});
+
 	}
 
 	// kick things off
