@@ -118,7 +118,8 @@ $(function() {
 	}
 
 	function startStreaming(stream) {
-		setStatus('watching');
+		startChilling();
+
 		video.srcObject = stream;
 		captureInterval = setInterval(capture, captureIntervalTime);
 
@@ -228,6 +229,10 @@ $(function() {
 		commit(bestDiff);
 		bestDiff = undefined;
 
+		startChilling();
+	}
+
+	function startChilling() {
 		setStatus('chilling');
 		stopChillingTimeout = setTimeout(stopChilling, chillTime);
 	}
