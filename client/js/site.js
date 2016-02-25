@@ -1,30 +1,19 @@
 $(function() {
 	// config
-	var captureIntervalTime = 100;	// time between captures, in ms
 	var considerTime = 4000;		// time window to consider best capture, in ms
 	var chillTime = 16000;			// time to chill after committing, in ms
-	var captureWidth = 512;
-	var captureHeight = 384;
-	var diffWidth = 64;
-	var diffHeight = 48;
-	var pixelDiffThreshold = 32;	// min for a pixel to be considered significant
-	var scoreThreshold = 8;			// min for an image to be considered significant
 	var historyMax = 3;				// max number of past captures to show on page
 
 	// shared
-	var captureInterval;
 	var stopConsideringTimeout;
 	var stopChillingTimeout;
 	var status;						// disabled, watching, considering, chilling
-	var newImage;					// newly capture image
-	var oldImage;					// previously captured image to compare against
 	var bestDiff;					// most significant diff while considering
-
-	var video, captureCanvas, captureContext, diffCanvas, diffContext,
-		motionCanvas, motionContext;
 
 	var $toggle = $('.toggle');
 	var $tweaks = $('.tweaks');
+	var $video = $('.video');
+	var $motionCanvas = $('.motion');
 	var $motionScore = $('.motion-score');
 	var $status = $('.status');
 	var $meter = $('.meter');
@@ -35,11 +24,17 @@ $(function() {
 	var $historyItemTemplate = $('#history-item-template');
 
 	function init() {
-		setStatus('disabled');
-		setCanvases();
-		setTweakInputs();
+		DiffCamEngine.init({
+			video: $video[0],
+			captureWidth: 512,
+			captureHeight: 384,
+			motionCanvas: $motionCanvas[0],
+			startCallback: startStreaming,
+			errorCallback: displayError
+		});
 
-		video = $('.video')[0];
+		setStatus('disabled');
+		setTweakInputs();
 
 		$toggle.on('click', toggleStreaming);
 		$tweaks.on('submit', getTweakInputs);
@@ -66,79 +61,39 @@ $(function() {
 		$meter.addClass(status);
 	}
 
-	function setCanvases() {
-		// create canvas for captures in memory
-		captureCanvas = document.createElement('canvas');
-		captureCanvas.width = captureWidth;
-		captureCanvas.height = captureHeight;
-		captureContext = captureCanvas.getContext('2d');
-
-		// create canvas for diffing in memory
-		diffCanvas = document.createElement('canvas');
-		diffCanvas.width = diffWidth;
-		diffCanvas.height = diffHeight;
-		diffContext = diffCanvas.getContext('2d');
-		diffContext.globalCompositeOperation = 'difference';
-
-		// set up canvas on page for showing motion
-		motionCanvas = $('.motion')[0];
-		motionCanvas.width = diffWidth;
-		motionCanvas.height = diffHeight;
-		motionContext = motionCanvas.getContext('2d');
-	}
-
 	function setTweakInputs() {
-		$pixelDiffThreshold.val(pixelDiffThreshold);
-		$scoreThreshold.val(scoreThreshold);
+		$pixelDiffThreshold.val(DiffCamEngine.getPixelDiffThreshold());
+		$scoreThreshold.val(DiffCamEngine.getScoreThreshold());
 	}
 
 	function getTweakInputs(e) {
 		e.preventDefault();
-		pixelDiffThreshold = $pixelDiffThreshold.val();
-		scoreThreshold = $scoreThreshold.val();
+		DiffCamEngine.setPixelDiffThreshold(+$pixelDiffThreshold.val());
+		DiffCamEngine.setScoreThreshold(+$scoreThreshold.val());
 	}
 
 	function toggleStreaming() {
 		if (status === 'disabled') {
-			requestCam();
+			DiffCamEngine.requestCam();
 		} else {
 			stopStreaming();
 		}
 	}
 
-	function requestCam() {
-		var constraints = {
-			audio: false,
-			video: { width: captureWidth, height: captureHeight }
-		};
-
-		navigator.mediaDevices.getUserMedia(constraints)
-			.then(startStreaming)
-			.catch(displayError);
-	}
-
-	function startStreaming(stream) {
+	function startStreaming() {
 		startChilling();
-
-		video.srcObject = stream;
-		captureInterval = setInterval(capture, captureIntervalTime);
-
 		$toggle
 			.removeClass('start')
 			.addClass('stop');
 	}
 
 	function stopStreaming() {
-		// kill time-delayed actions
-		clearInterval(captureInterval);
+		DiffCamEngine.stopStreaming();
 		clearTimeout(stopConsideringTimeout);
 		clearTimeout(stopChillingTimeout);
 		setStatus('disabled');
 		bestDiff = undefined;
 
-		video.srcObject.getVideoTracks()[0].stop();
-		video.src = '';
-		motionContext.clearRect(0, 0, diffWidth, diffHeight);
 		$motionScore.text('');
 
 		$toggle
@@ -153,17 +108,7 @@ $(function() {
 			.prop('disabled', true);
 	}
 
-	function capture() {
-		// capture from video
-		captureContext.drawImage(video, 0, 0, captureWidth, captureHeight);
-
-		// create as image
-		newImage = new Image();
-		newImage.onload = checkImage;
-		newImage.src = captureCanvas.toDataURL();
-	}
-
-	function checkImage() {
+	function XcheckImage() {
 		var newImage = this;
 		newImage.onload = null;
 
@@ -194,37 +139,6 @@ $(function() {
 		}
 	}
 
-	function calculateDiff(oldImage, newImage) {
-		// clear canvas and draw both images
-		diffContext.clearRect(0, 0, diffWidth, diffHeight);
-		diffContext.drawImage(oldImage, 0, 0, diffWidth, diffHeight);
-		diffContext.drawImage(newImage, 0, 0, diffWidth, diffHeight);
-
-		// get pixel data
-		var imageData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
-		var rgba = imageData.data;
-
-		// score each pixel, adjust color for display
-		var score = 0;
-		for (var i = 0; i < rgba.length; i += 4) {
-			var pixelDiff = rgba[i] * 0.3 + rgba[i + 1] * 0.6 + rgba[i + 2] * 0.1;
-			var normalized = Math.min(255, pixelDiff * (255 / pixelDiffThreshold));
-			rgba[i] = 0;
-			rgba[i + 1] = normalized;
-			rgba[i + 2] = 0;
-
-			if (pixelDiff >= pixelDiffThreshold) {
-				score++;
-			}
-		}
-
-		return {
-			newImageSrc: newImage.src,
-			imageData: imageData,
-			score: score
-		};
-	}
-
 	function stopConsidering() {
 		commit(bestDiff);
 		bestDiff = undefined;
@@ -241,7 +155,7 @@ $(function() {
 		setStatus('watching');
 	}
 
-	function commit(diff) {
+	function Xcommit(diff) {
 		// prep values
 		var src = diff.newImageSrc;
 		var time = new Date().toLocaleTimeString().toLowerCase();
