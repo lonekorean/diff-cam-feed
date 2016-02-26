@@ -1,19 +1,22 @@
 var DiffCamEngine = (function() {
-	var isStreaming;
-	var captureCanvas;
-	var diffCanvas;
-	var captureInterval;
-	var oldImage;				// previously captured image to compare against
 	var video;
+	var captureCanvas;			// internal canvas for capturing images from video
+	var diffCanvas;				// internal canvas for diffing captured images
 	var motionCanvas;
+
+	var startCallback;			// called when streaming starts
+	var errorCallback;			// called when getUserMedia() fails
+	var captureCallback;		// called when an image is captured from video
+
+	var isStreaming;
+	var oldImage;				// previously captured image to compare against
+	var captureInterval;
 	var captureIntervalTime;	// time between captures, in ms
 	var captureWidth;
 	var captureHeight;
 	var diffWidth;
 	var diffHeight;
 	var pixelDiffThreshold;		// min for a pixel to be considered significant
-	var scoreThreshold;			// min for an image to be considered significant
-	var captureCallback;
 
 	function init(options) {
 		// sanity check
@@ -21,12 +24,7 @@ var DiffCamEngine = (function() {
 			throw 'No options object provided';
 		}
 
-		// non-configurable
-		isStreaming = false;
-		captureCanvas = document.createElement('canvas');
-		diffCanvas = document.createElement('canvas');
-
-		// incoming options with default
+		// incoming options with defaults
 		video = options.video || document.createElement('video');
 		motionCanvas = options.motionCanvas || document.createElement('canvas');
 		captureIntervalTime = options.captureIntervalTime || 100;
@@ -35,11 +33,16 @@ var DiffCamEngine = (function() {
 		diffWidth = options.diffWidth || 64;
 		diffHeight = options.diffHeight || 48;
 		pixelDiffThreshold = options.pixelDiffThreshold || 32;
-		scoreThreshold = options.scoreThreshold || 8;
 
+		// callbacks
 		startCallback = options.startCallback || function() {};
 		errorCallback = options.errorCallback || function() {};
 		captureCallback = options.captureCallback || function() {};
+
+		// non-configurable
+		captureCanvas = document.createElement('canvas');
+		diffCanvas = document.createElement('canvas');
+		isStreaming = false;
 
 		// prep capture canvas
 		captureCanvas.width = captureWidth;
@@ -66,17 +69,18 @@ var DiffCamEngine = (function() {
 
 		navigator.mediaDevices.getUserMedia(constraints)
 			.then(startStreaming)
-			.catch(errorCallback);
+			.catch(handleError);
 	}
 
-	function displayError(error) {
+	function handleError(error) {
 		console.log(error);
+		errorCallback();
 	}
 
 	function startStreaming(stream) {
-		isStreaming = true;
 		video.srcObject = stream;
 		captureInterval = setInterval(capture, captureIntervalTime);
+		isStreaming = true;
 
 		startCallback();
 	}
@@ -119,7 +123,6 @@ var DiffCamEngine = (function() {
 		}
 
 		oldImage = newImage;
-		captureCallback();
 	}
 
 	function calculateDiff(oldImage, newImage) {
@@ -153,12 +156,18 @@ var DiffCamEngine = (function() {
 		};
 	}
 
-	return {
-		getPixelDiffThreshold: function() { return pixelDiffThreshold; },
-		setPixelDiffThreshold: function(val) { pixelDiffThreshold = val; },
+	function getPixelDiffThreshold() {
+		return pixelDiffThreshold;
+	}
 
-		getScoreThreshold: function() { return scoreThreshold; },
-		setScoreThreshold: function(val) { scoreThreshold = val; },
+	function setPixelDiffThreshold(val) {
+		pixelDiffThreshold = val;
+	}
+
+	return {
+		// public getters/setters
+		getPixelDiffThreshold: getPixelDiffThreshold,
+		setPixelDiffThreshold: setPixelDiffThreshold,
 
 		// public functions
 		init: init,

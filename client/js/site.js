@@ -1,10 +1,9 @@
 $(function() {
-	// config
+	var scoreThreshold = 8;			// min for an image to be considered significant
 	var considerTime = 4000;		// time window to consider best capture, in ms
 	var chillTime = 16000;			// time to chill after committing, in ms
 	var historyMax = 3;				// max number of past captures to show on page
 
-	// shared
 	var stopConsideringTimeout;
 	var stopChillingTimeout;
 	var status;						// disabled, watching, considering, chilling
@@ -26,11 +25,12 @@ $(function() {
 	function init() {
 		DiffCamEngine.init({
 			video: $video[0],
+			motionCanvas: $motionCanvas[0],
 			captureWidth: 512,
 			captureHeight: 384,
-			motionCanvas: $motionCanvas[0],
 			startCallback: startStreaming,
-			errorCallback: displayError
+			errorCallback: disableControls,
+			captureCallback: checkImage
 		});
 
 		setStatus('disabled');
@@ -63,13 +63,13 @@ $(function() {
 
 	function setTweakInputs() {
 		$pixelDiffThreshold.val(DiffCamEngine.getPixelDiffThreshold());
-		$scoreThreshold.val(DiffCamEngine.getScoreThreshold());
+		$scoreThreshold.val(scoreThreshold);
 	}
 
 	function getTweakInputs(e) {
 		e.preventDefault();
 		DiffCamEngine.setPixelDiffThreshold(+$pixelDiffThreshold.val());
-		DiffCamEngine.setScoreThreshold(+$scoreThreshold.val());
+		scoreThreshold = +$scoreThreshold.val();
 	}
 
 	function toggleStreaming() {
@@ -95,47 +95,28 @@ $(function() {
 		bestDiff = undefined;
 
 		$motionScore.text('');
-
 		$toggle
 			.removeClass('stop')
 			.addClass('start');
 	}
 
-	function displayError(error) {
-		console.log(error);
+	function disableControls(error) {
 		$toggle
 			.removeClass('start stop')
 			.prop('disabled', true);
 	}
 
-	function XcheckImage() {
-		var newImage = this;
-		newImage.onload = null;
+	function checkImage(diff) {
+		$motionScore.text(diff.score);
 
-		// safety check (user could stop stream during image load)
-		if (status !== 'disabled') {
-			if (oldImage) {
-				var diff = calculateDiff(oldImage, newImage);
-
-				// show motion on page
-				motionContext.putImageData(diff.imageData, 0, 0);
-				$motionScore.text(diff.score);
-
-				if (status === 'watching' && diff.score > scoreThreshold) {
-					// this diff is good enough to start a consideration time window
-					setStatus('considering');
-					bestDiff = diff;
-					stopConsideringTimeout = setTimeout(stopConsidering, considerTime);
-				} else if (status === 'considering' && diff.score > bestDiff.score) {
-					// this is the new best diff for this consideration time window
-					bestDiff = diff;
-				}
-
-				// fixes nasty memory leak
-				oldImage.src = '';
-			}
-
-			oldImage = newImage;
+		if (status === 'watching' && diff.score > scoreThreshold) {
+			// this diff is good enough to start a consideration time window
+			setStatus('considering');
+			bestDiff = diff;
+			stopConsideringTimeout = setTimeout(stopConsidering, considerTime);
+		} else if (status === 'considering' && diff.score > bestDiff.score) {
+			// this is the new best diff for this consideration time window
+			bestDiff = diff;
 		}
 	}
 
@@ -155,7 +136,7 @@ $(function() {
 		setStatus('watching');
 	}
 
-	function Xcommit(diff) {
+	function commit(diff) {
 		// prep values
 		var src = diff.newImageSrc;
 		var time = new Date().toLocaleTimeString().toLowerCase();
@@ -174,6 +155,9 @@ $(function() {
 		// trim
 		$('.history figure').slice(historyMax).remove();
 
+		// TODO: remove short circuit
+		console.log('upload here');
+		return;
 		$.ajax({
 			type: 'POST',
 			url: '/upload',
