@@ -4,11 +4,10 @@ var DiffCamEngine = (function() {
 	var diffCanvas;				// internal canvas for diffing captured images
 	var motionCanvas;
 
-	var startCallback;			// called when streaming starts
-	var errorCallback;			// called when getUserMedia() fails
-	var captureCallback;		// called when an image is captured from video
+	var startSuccessCallback;	// called when streaming starts
+	var startErrorCallback;		// called when getUserMedia() fails
+	var captureCallback;		// called when an image has been captured and diffed
 
-	var isStreaming;
 	var oldImage;				// previously captured image to compare against
 	var captureInterval;
 	var captureIntervalTime;	// time between captures, in ms
@@ -35,14 +34,14 @@ var DiffCamEngine = (function() {
 		pixelDiffThreshold = options.pixelDiffThreshold || 32;
 
 		// callbacks
-		startCallback = options.startCallback || function() {};
-		errorCallback = options.errorCallback || function() {};
+		startSuccessCallback = options.startSuccessCallback || function() {};
+		startErrorCallback = options.startErrorCallback || function() {};
 		captureCallback = options.captureCallback || function() {};
 
 		// non-configurable
 		captureCanvas = document.createElement('canvas');
 		diffCanvas = document.createElement('canvas');
-		isStreaming = false;
+		oldImage = undefined;
 
 		// prep capture canvas
 		captureCanvas.width = captureWidth;
@@ -61,34 +60,30 @@ var DiffCamEngine = (function() {
 		motionContext = motionCanvas.getContext('2d');
 	}
 
-	function requestCam() {
+	function start() {
 		var constraints = {
 			audio: false,
 			video: { width: captureWidth, height: captureHeight }
 		};
 
 		navigator.mediaDevices.getUserMedia(constraints)
-			.then(startStreaming)
-			.catch(handleError);
+			.then(startSuccess)
+			.catch(startError);
 	}
 
-	function handleError(error) {
-		console.log(error);
-		errorCallback();
-	}
-
-	function startStreaming(stream) {
+	function startSuccess(stream) {
 		video.srcObject = stream;
 		captureInterval = setInterval(capture, captureIntervalTime);
-		isStreaming = true;
-
-		startCallback();
+		startSuccessCallback();
 	}
 
-	function stopStreaming() {
-		clearInterval(captureInterval);
-		isStreaming = false;
+	function startError(error) {
+		console.log(error);
+		startErrorCallback();
+	}
 
+	function stop() {
+		clearInterval(captureInterval);
 		video.srcObject.getVideoTracks()[0].stop();
 		video.src = '';
 		motionContext.clearRect(0, 0, diffWidth, diffHeight);
@@ -108,8 +103,8 @@ var DiffCamEngine = (function() {
 		var newImage = this;
 		newImage.onload = null;
 
-		// safety check (stream may have stopped during image load)
-		if (!isStreaming) {
+		// safety check (may have stopped streaming during image load)
+		if (video.paused) {
 			return;
 		}
 
@@ -171,7 +166,7 @@ var DiffCamEngine = (function() {
 
 		// public functions
 		init: init,
-		requestCam: requestCam,
-		stopStreaming: stopStreaming
+		start: start,
+		stop: stop
 	};
 })();

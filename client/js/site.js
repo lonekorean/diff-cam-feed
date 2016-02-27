@@ -28,8 +28,8 @@ $(function() {
 			motionCanvas: $motionCanvas[0],
 			captureWidth: 512,
 			captureHeight: 384,
-			startCallback: startStreaming,
-			errorCallback: disableControls,
+			startSuccessCallback: startStreaming,
+			startErrorCallback: disableControls,
 			captureCallback: checkImage
 		});
 
@@ -74,7 +74,8 @@ $(function() {
 
 	function toggleStreaming() {
 		if (status === 'disabled') {
-			DiffCamEngine.requestCam();
+			// this will turn around and call startStreaming() on success
+			DiffCamEngine.start();
 		} else {
 			stopStreaming();
 		}
@@ -88,7 +89,7 @@ $(function() {
 	}
 
 	function stopStreaming() {
-		DiffCamEngine.stopStreaming();
+		DiffCamEngine.stop();
 		clearTimeout(stopConsideringTimeout);
 		clearTimeout(stopChillingTimeout);
 		setStatus('disabled');
