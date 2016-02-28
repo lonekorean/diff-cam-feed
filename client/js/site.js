@@ -26,8 +26,8 @@ $(function() {
 		DiffCamEngine.init({
 			video: $video[0],
 			motionCanvas: $motionCanvas[0],
-			captureWidth: 512,
-			captureHeight: 384,
+			captureWidth: 520,
+			captureHeight: 390,
 			startSuccessCallback: startStreaming,
 			startErrorCallback: disableControls,
 			captureCallback: checkImage
@@ -156,9 +156,6 @@ $(function() {
 		// trim
 		$('.history figure').slice(historyMax).remove();
 
-		// TODO: remove short circuit
-		console.log('upload here');
-		return;
 		$.ajax({
 			type: 'POST',
 			url: '/upload',
@@ -167,7 +164,6 @@ $(function() {
 				dataURL: diff.newImageSrc.replace('data:image/png;base64,', '')
 			}
 		});
-
 	}
 
 	// kick things off

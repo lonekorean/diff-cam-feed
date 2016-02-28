@@ -72,7 +72,15 @@ var DiffCamEngine = (function() {
 	}
 
 	function startSuccess(stream) {
+		// good to go, but streaming still takes a moment to start
+		video.addEventListener('canplay', startComplete);
 		video.srcObject = stream;
+	}
+
+	function startComplete() {
+		// clean up the event listener
+		video.removeEventListener('canplay', startComplete);
+
 		captureInterval = setInterval(capture, captureIntervalTime);
 		startSuccessCallback();
 	}
