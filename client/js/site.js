@@ -7,7 +7,7 @@ $(function() {
 	var stopConsideringTimeout;
 	var stopChillingTimeout;
 	var status;						// disabled, watching, considering, chilling
-	var bestDiff;					// most significant diff while considering
+	var bestCapture;				// most significant capture while considering
 
 	var $toggle = $('.toggle');
 	var $tweaks = $('.tweaks');
@@ -30,7 +30,7 @@ $(function() {
 			//captureHeight: 390,
 			startSuccessCallback: startStreaming,
 			startErrorCallback: disableControls,
-			captureCallback: checkImage
+			captureCallback: checkCapture
 		});
 
 		setStatus('disabled');
@@ -93,7 +93,7 @@ $(function() {
 		clearTimeout(stopConsideringTimeout);
 		clearTimeout(stopChillingTimeout);
 		setStatus('disabled');
-		bestDiff = undefined;
+		bestCapture = undefined;
 
 		$motionScore.text('');
 		$toggle
@@ -107,24 +107,22 @@ $(function() {
 			.prop('disabled', true);
 	}
 
-	function checkImage(capturedImageData, diffScore) {
-		$motionScore.text(diffScore);
+	function checkCapture(capture) {
+		$motionScore.text(capture.score);
 
-		if (status === 'watching' && diffScore > scoreThreshold) {
+		if (status === 'watching' && capture.score > scoreThreshold) {
 			// this diff is good enough to start a consideration time window
 			setStatus('considering');
-			bestDiff = diff;
+			bestCapture = capture;
 			stopConsideringTimeout = setTimeout(stopConsidering, considerTime);
-		} else if (status === 'considering' && diffScore > bestDiff.score) {
+		} else if (status === 'considering' && capture.score > bestCapture.score) {
 			// this is the new best diff for this consideration time window
-			bestDiff = diff;
+			bestCapture = capture;
 		}
 	}
 
 	function stopConsidering() {
-		commit(bestDiff);
-		bestDiff = undefined;
-
+		commit();
 		startChilling();
 	}
 
@@ -137,18 +135,18 @@ $(function() {
 		setStatus('watching');
 	}
 
-	function commit(diff) {
+	function commit() {
 		// prep values
-		//var src = diff.newImageSrc;
+		var src = bestCapture.getURL();
 		var time = new Date().toLocaleTimeString().toLowerCase();
-		var score = diff.score;
+		var score = bestCapture.score;
 
 		// load html from template
 		var html = $historyItemTemplate.html();
 		var $newHistoryItem = $(html);
 
 		// set values and add to page
-		//$newHistoryItem.find('img').attr('src', src);
+		$newHistoryItem.find('img').attr('src', src);
 		$newHistoryItem.find('.time').text(time);
 		$newHistoryItem.find('.score').text(score);
 		$history.prepend($newHistoryItem);
@@ -166,6 +164,7 @@ $(function() {
 			}
 		});
 */
+		bestCapture = undefined;
 	}
 
 	// kick things off

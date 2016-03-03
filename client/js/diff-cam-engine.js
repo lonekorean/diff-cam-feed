@@ -110,7 +110,11 @@ var DiffCamEngine = (function() {
 		if (isReadyToDiff) {
 			var score = processDiff(diffImageData);
 			motionContext.putImageData(diffImageData, 0, 0);
-			captureCallback(captureImageData, score);
+			captureCallback({
+				imageData: captureImageData,
+				score: score,
+				getURL: getCaptureURL.bind(null, captureImageData)
+			});
 		}
 
 		// draw current capture normally over diff, ready for next time
@@ -122,7 +126,7 @@ var DiffCamEngine = (function() {
 	function processDiff(diffImageData) {
 		var rgba = diffImageData.data;
 
-		// pixel adjustments are done by reference on diffImageData
+		// pixel adjustments are done by reference directly on diffImageData
 		var score = 0;
 		for (var i = 0; i < rgba.length; i += 4) {
 			var pixelDiff = rgba[i] * 0.3 + rgba[i + 1] * 0.6 + rgba[i + 2] * 0.1;
@@ -137,6 +141,12 @@ var DiffCamEngine = (function() {
 		}
 
 		return score;
+	}
+
+	function getCaptureURL(captureImageData) {
+		// may as well borrow captureCanvas
+		captureContext.putImageData(captureImageData, 0, 0);
+		return captureCanvas.toDataURL();
 	}
 
 	function getPixelDiffThreshold() {
