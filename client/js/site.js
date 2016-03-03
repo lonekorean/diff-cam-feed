@@ -26,8 +26,8 @@ $(function() {
 		DiffCamEngine.init({
 			video: $video[0],
 			motionCanvas: $motionCanvas[0],
-			captureWidth: 520,
-			captureHeight: 390,
+			//captureWidth: 520,
+			//captureHeight: 390,
 			startSuccessCallback: startStreaming,
 			startErrorCallback: disableControls,
 			captureCallback: checkImage
@@ -107,15 +107,15 @@ $(function() {
 			.prop('disabled', true);
 	}
 
-	function checkImage(diff) {
-		$motionScore.text(diff.score);
+	function checkImage(capturedImageData, diffScore) {
+		$motionScore.text(diffScore);
 
-		if (status === 'watching' && diff.score > scoreThreshold) {
+		if (status === 'watching' && diffScore > scoreThreshold) {
 			// this diff is good enough to start a consideration time window
 			setStatus('considering');
 			bestDiff = diff;
 			stopConsideringTimeout = setTimeout(stopConsidering, considerTime);
-		} else if (status === 'considering' && diff.score > bestDiff.score) {
+		} else if (status === 'considering' && diffScore > bestDiff.score) {
 			// this is the new best diff for this consideration time window
 			bestDiff = diff;
 		}
@@ -139,7 +139,7 @@ $(function() {
 
 	function commit(diff) {
 		// prep values
-		var src = diff.newImageSrc;
+		//var src = diff.newImageSrc;
 		var time = new Date().toLocaleTimeString().toLowerCase();
 		var score = diff.score;
 
@@ -148,7 +148,7 @@ $(function() {
 		var $newHistoryItem = $(html);
 
 		// set values and add to page
-		$newHistoryItem.find('img').attr('src', src);
+		//$newHistoryItem.find('img').attr('src', src);
 		$newHistoryItem.find('.time').text(time);
 		$newHistoryItem.find('.score').text(score);
 		$history.prepend($newHistoryItem);
@@ -156,6 +156,7 @@ $(function() {
 		// trim
 		$('.history figure').slice(historyMax).remove();
 
+/*
 		$.ajax({
 			type: 'POST',
 			url: '/upload',
@@ -164,6 +165,7 @@ $(function() {
 				dataURL: diff.newImageSrc.replace('data:image/png;base64,', '')
 			}
 		});
+*/
 	}
 
 	// kick things off

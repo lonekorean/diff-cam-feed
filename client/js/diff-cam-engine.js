@@ -1,20 +1,20 @@
 var DiffCamEngine = (function() {
-	var video;
-	var captureCanvas;			// internal canvas for capturing images from video
-	var diffCanvas;				// internal canvas for diffing captured images
-	var motionCanvas;
+	var video;					// shows stream from webcam
+	var captureCanvas;			// internal canvas for capturing full images from video
+	var diffCanvas;				// internal canvas for diffing downscaled captures
+	var motionCanvas;			// receives processed diff images
 
 	var startSuccessCallback;	// called when streaming starts
 	var startErrorCallback;		// called when getUserMedia() fails
 	var captureCallback;		// called when an image has been captured and diffed
 
-	var oldImage;				// previously captured image to compare against
-	var captureInterval;
+	var captureInterval;		// interval for continuous captures
 	var captureIntervalTime;	// time between captures, in ms
-	var captureWidth;
-	var captureHeight;
-	var diffWidth;
-	var diffHeight;
+	var captureWidth;			// full captured image width
+	var captureHeight;			// full captured image height
+	var diffWidth;				// downscaled width for diff/motion
+	var diffHeight;				// downscaled height for diff/motion
+	var isReadyToDiff;			// has a previous capture been made to diff against?
 	var pixelDiffThreshold;		// min for a pixel to be considered significant
 
 	function init(options) {
@@ -41,7 +41,7 @@ var DiffCamEngine = (function() {
 		// non-configurable
 		captureCanvas = document.createElement('canvas');
 		diffCanvas = document.createElement('canvas');
-		oldImage = undefined;
+		isReadyToDiff = false;
 
 		// prep capture canvas
 		captureCanvas.width = captureWidth;
@@ -52,7 +52,6 @@ var DiffCamEngine = (function() {
 		diffCanvas.width = diffWidth;
 		diffCanvas.height = diffHeight;
 		diffContext = diffCanvas.getContext('2d');
-		diffContext.globalCompositeOperation = 'difference';
 
 		// prep motion canvas
 		motionCanvas.width = diffWidth;
@@ -95,50 +94,35 @@ var DiffCamEngine = (function() {
 		video.srcObject.getVideoTracks()[0].stop();
 		video.src = '';
 		motionContext.clearRect(0, 0, diffWidth, diffHeight);
+		isReadyToDiff = false;
 	}
 
 	function capture() {
-		// capture from video
+		// save a full-sized copy of capture
 		captureContext.drawImage(video, 0, 0, captureWidth, captureHeight);
+		captureImageData = captureContext.getImageData(0, 0, captureWidth, captureHeight);
 
-		// create as image
-		var newImage = new Image();
-		newImage.onload = checkImage;
-		newImage.src = captureCanvas.toDataURL();
-	}
+		// diff current capture over previous capture, leftover from last time
+		diffContext.globalCompositeOperation = 'difference';
+		diffContext.drawImage(video, 0, 0, diffWidth, diffHeight);
+		diffImageData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
 
-	function checkImage() {
-		var newImage = this;
-		newImage.onload = null;
-
-		// safety check (may have stopped streaming during image load)
-		if (video.paused) {
-			return;
+		if (isReadyToDiff) {
+			var score = processDiff(diffImageData);
+			motionContext.putImageData(diffImageData, 0, 0);
+			captureCallback(captureImageData, score);
 		}
 
-		if (oldImage) {
-			var diff = calculateDiff(oldImage, newImage);
-			motionContext.putImageData(diff.imageData, 0, 0);
-			captureCallback(diff);
-
-			// fixes nasty memory leak
-			oldImage.src = '';
-		}
-
-		oldImage = newImage;
+		// draw current capture normally over diff, ready for next time
+		diffContext.globalCompositeOperation = 'source-over';
+		diffContext.drawImage(video, 0, 0, diffWidth, diffHeight);
+		isReadyToDiff = true;
 	}
 
-	function calculateDiff(oldImage, newImage) {
-		// clear canvas and draw both images
-		diffContext.clearRect(0, 0, diffWidth, diffHeight);
-		diffContext.drawImage(oldImage, 0, 0, diffWidth, diffHeight);
-		diffContext.drawImage(newImage, 0, 0, diffWidth, diffHeight);
+	function processDiff(diffImageData) {
+		var rgba = diffImageData.data;
 
-		// get pixel data
-		var imageData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
-		var rgba = imageData.data;
-
-		// score each pixel, adjust color for display
+		// pixel adjustments are done by reference on diffImageData
 		var score = 0;
 		for (var i = 0; i < rgba.length; i += 4) {
 			var pixelDiff = rgba[i] * 0.3 + rgba[i + 1] * 0.6 + rgba[i + 2] * 0.1;
@@ -152,11 +136,7 @@ var DiffCamEngine = (function() {
 			}
 		}
 
-		return {
-			newImageSrc: newImage.src,
-			imageData: imageData,
-			score: score
-		};
+		return score;
 	}
 
 	function getPixelDiffThreshold() {
