@@ -24,6 +24,9 @@ $(function() {
 	var $historyItemTemplate = $('#history-item-template');
 
 	function init() {
+		// don't want console logs from adapter.js
+		adapter.disableLog(true);
+
 		DiffCamEngine.init({
 			video: $video[0],
 			motionCanvas: $motionCanvas[0],
