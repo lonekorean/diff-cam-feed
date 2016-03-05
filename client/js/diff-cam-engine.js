@@ -113,7 +113,7 @@ var DiffCamEngine = (function() {
 			captureCallback({
 				imageData: captureImageData,
 				score: score,
-				getURL: getCaptureURL.bind(null, captureImageData)
+				getURL: getCaptureUrl.bind(null, captureImageData)
 			});
 		}
 
@@ -143,7 +143,7 @@ var DiffCamEngine = (function() {
 		return score;
 	}
 
-	function getCaptureURL(captureImageData) {
+	function getCaptureUrl(captureImageData) {
 		// may as well borrow captureCanvas
 		captureContext.putImageData(captureImageData, 0, 0);
 		return captureCanvas.toDataURL();

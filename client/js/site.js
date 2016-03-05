@@ -1,7 +1,8 @@
 $(function() {
+	var isTestMode = false;
 	var scoreThreshold = 8;			// min for an image to be considered significant
 	var considerTime = 4000;		// time window to consider best capture, in ms
-	var chillTime = 16000;			// time to chill after committing, in ms
+	var chillTime = 4000;			// time to chill after committing, in ms
 	var historyMax = 3;				// max number of past captures to show on page
 
 	var stopConsideringTimeout;
@@ -26,8 +27,6 @@ $(function() {
 		DiffCamEngine.init({
 			video: $video[0],
 			motionCanvas: $motionCanvas[0],
-			//captureWidth: 520,
-			//captureHeight: 390,
 			startSuccessCallback: startStreaming,
 			startErrorCallback: disableControls,
 			captureCallback: checkCapture
@@ -137,7 +136,8 @@ $(function() {
 
 	function commit() {
 		// prep values
-		var src = bestCapture.getURL();
+		var bestCaptureUrl = bestCapture.getURL();
+		var src = bestCaptureUrl;
 		var time = new Date().toLocaleTimeString().toLowerCase();
 		var score = bestCapture.score;
 
@@ -152,18 +152,20 @@ $(function() {
 		$history.prepend($newHistoryItem);
 
 		// trim
-		$('.history figure').slice(historyMax).remove();
+		$trim = $('.history figure').slice(historyMax);
+		$trim.find('img').attr('src', '');
+		$trim.remove();
 
-/*
 		$.ajax({
 			type: 'POST',
 			url: '/upload',
 			data: {
-				score: diff.score,
-				dataURL: diff.newImageSrc.replace('data:image/png;base64,', '')
+				isTestMode: isTestMode,
+				score: bestCapture.score,
+				dataURL: bestCaptureUrl.replace('data:image/png;base64,', '')
 			}
 		});
-*/
+
 		bestCapture = undefined;
 	}
 
