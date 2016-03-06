@@ -1,5 +1,5 @@
 $(function() {
-	var isTestMode = false;
+	var isTestMode = true;
 	var scoreThreshold = 8;			// min for an image to be considered significant
 	var considerTime = 4000;		// time window to consider best capture, in ms
 	var chillTime = 4000;			// time to chill after committing, in ms
@@ -27,19 +27,25 @@ $(function() {
 		// don't want console logs from adapter.js
 		adapter.disableLog(true);
 
+		setStatus('disabled');
 		DiffCamEngine.init({
 			video: $video[0],
 			motionCanvas: $motionCanvas[0],
-			startSuccessCallback: startStreaming,
-			startErrorCallback: disableControls,
+			initSuccessCallback: initSuccess,
+			startCompleteCallback: startStreaming,
 			captureCallback: checkCapture
 		});
+	}
 
-		setStatus('disabled');
+	function initSuccess() {
 		setTweakInputs();
-
-		$toggle.on('click', toggleStreaming);
-		$tweaks.on('submit', getTweakInputs);
+		$toggle
+			.addClass('start')
+			.prop('disabled', false)
+			.on('click', toggleStreaming);
+		$tweaks
+			.on('submit', getTweakInputs)
+			.find('input').prop('disabled', false);
 	}
 
 	function setStatus(newStatus) {
@@ -101,12 +107,6 @@ $(function() {
 		$toggle
 			.removeClass('stop')
 			.addClass('start');
-	}
-
-	function disableControls(error) {
-		$toggle
-			.removeClass('start stop')
-			.prop('disabled', true);
 	}
 
 	function checkCapture(capture) {

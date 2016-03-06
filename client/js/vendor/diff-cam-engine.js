@@ -1,11 +1,13 @@
 var DiffCamEngine = (function() {
-	var video;					// shows stream from webcam
+	var stream;					// stream obtained from webcam
+	var video;					// shows stream
 	var captureCanvas;			// internal canvas for capturing full images from video
 	var diffCanvas;				// internal canvas for diffing downscaled captures
 	var motionCanvas;			// receives processed diff images
 
-	var startSuccessCallback;	// called when streaming starts
-	var startErrorCallback;		// called when getUserMedia() fails
+	var initSuccessCallback;	// called when init succeeds
+	var initErrorCallback;		// called when init fails
+	var startCompleteCallback;	// called when start is complete
 	var captureCallback;		// called when an image has been captured and diffed
 
 	var captureInterval;		// interval for continuous captures
@@ -34,8 +36,9 @@ var DiffCamEngine = (function() {
 		pixelDiffThreshold = options.pixelDiffThreshold || 32;
 
 		// callbacks
-		startSuccessCallback = options.startSuccessCallback || function() {};
-		startErrorCallback = options.startErrorCallback || function() {};
+		initSuccessCallback = options.initSuccessCallback || function() {};
+		initErrorCallback = options.initErrorCallback || function() {};
+		startCompleteCallback = options.startCompleteCallback || function() {};
 		captureCallback = options.captureCallback || function() {};
 
 		// non-configurable
@@ -57,41 +60,45 @@ var DiffCamEngine = (function() {
 		motionCanvas.width = diffWidth;
 		motionCanvas.height = diffHeight;
 		motionContext = motionCanvas.getContext('2d');
+
+		requestWebcam();
 	}
 
-	function start() {
+	function requestWebcam() {
 		var constraints = {
 			audio: false,
 			video: { width: captureWidth, height: captureHeight }
 		};
 
 		navigator.mediaDevices.getUserMedia(constraints)
-			.then(startSuccess)
-			.catch(startError);
+			.then(initSuccess)
+			.catch(initError);
 	}
 
-	function startSuccess(stream) {
-		// good to go, but streaming still takes a moment to start
+	function initSuccess(requestedStream) {
+		stream = requestedStream;
+		initSuccessCallback();
+	}
+
+	function initError(error) {
+		console.log(error);
+		initErrorCallback();
+	}
+
+	function start() {
+		// streaming takes a moment to start
 		video.addEventListener('canplay', startComplete);
 		video.srcObject = stream;
 	}
 
 	function startComplete() {
-		// clean up the event listener
 		video.removeEventListener('canplay', startComplete);
-
 		captureInterval = setInterval(capture, captureIntervalTime);
-		startSuccessCallback();
-	}
-
-	function startError(error) {
-		console.log(error);
-		startErrorCallback();
+		startCompleteCallback();
 	}
 
 	function stop() {
 		clearInterval(captureInterval);
-		video.srcObject.getVideoTracks()[0].stop();
 		video.src = '';
 		motionContext.clearRect(0, 0, diffWidth, diffHeight);
 		isReadyToDiff = false;

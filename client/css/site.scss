@@ -61,7 +61,6 @@ section:not(:first-child) {
 	padding: 0;
 	border: none;
 	background-color: transparent;
-	cursor: pointer;
 	appearance: none;
 
 	&::before {
@@ -74,11 +73,13 @@ section:not(:first-child) {
 	&.start::before {
 		content: '\f144'; // play
 		color: #090;
+		cursor: pointer;
 	}
 
 	&.stop::before {
 		content: '\f28d'; // stop
 		color: #900;
+		cursor: pointer;
 	}
 }
 
