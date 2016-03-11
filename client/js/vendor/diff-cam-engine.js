@@ -86,6 +86,10 @@ var DiffCamEngine = (function() {
 	}
 
 	function start() {
+		if (!stream) {
+			throw 'Cannot start after init fail';
+		}
+
 		// streaming takes a moment to start
 		video.addEventListener('canplay', startComplete);
 		video.srcObject = stream;
