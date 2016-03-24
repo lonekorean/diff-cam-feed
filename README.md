@@ -1,4 +1,3 @@
-diff-cam
-========
+# diff-cam-feed
 
-Web app to capture images from a live cam feed based on a diff algorithm, then transmit the images to a remote viewer.
+Web app that uses motion detection to take a snapshot when something moves, then uploads the image to Twitter.
