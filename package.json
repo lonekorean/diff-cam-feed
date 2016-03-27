@@ -2,31 +2,33 @@
   "name": "diff-cam-feed",
   "version": "1.0.0",
   "private": true,
-  "description": "",
-  "main": "app.js",
+  "description": "Web app that uses motion detection to take a snapshot when something moves, then uploads the image to Twitter.",
+  "main": "dist/server/app.js",
   "scripts": {
     "start": "node dist/server/app.js",
+    "postinstall": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Will Boyd",
+  "license": "MIT",
+  "engines": {
+    "node": "0.12.6"
+  },
   "dependencies": {
     "body-parser": "^1.14.2",
     "express": "^4.13.3",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.13.0",
     "fs": "0.0.2",
-    "passport": "^0.3.2",
-    "passport-twitter": "^1.0.3",
-    "twitter": "^1.2.5",
-    "webrtc-adapter-test": "^0.2.5"
-  },
-  "devDependencies": {
     "gulp": "^3.9.0",
     "gulp-autoprefixer": "^3.1.0",
     "gulp-jshint": "^2.0.0",
     "gulp-sass": "^2.1.1",
     "jshint": "^2.8.0",
-    "jshint-stylish": "^2.1.0"
+    "jshint-stylish": "^2.1.0",
+    "passport": "^0.3.2",
+    "passport-twitter": "^1.0.3",
+    "twitter": "^1.2.5",
+    "webrtc-adapter-test": "^0.2.5"
   }
 }

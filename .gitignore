@@ -1,6 +1,11 @@
+# ignore directories
 dist/
 node_modules/
+
+# ignore file extensions
 *.log
-env.js
+
+# ignore specific filenames
 .DS_Store
+.env
 Thumbs.db

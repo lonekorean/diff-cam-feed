@@ -72,10 +72,10 @@ gulp.task('config-js', function() {
 });
 
 // build site
-gulp.task('build', ['client-static', 'client-css', 'client-js', 'server-js', 'server-hbs', 'config-js']);
+gulp.task('default', ['client-static', 'client-css', 'client-js', 'server-js', 'server-hbs', 'config-js']);
 
 // build site and watch for changes
-gulp.task('watch', ['build'], function() {
+gulp.task('watch', ['default'], function() {
 	gulp.watch(sources.client.static, ['client-static']);
 	gulp.watch(sources.client.css, ['client-css']);
 	gulp.watch(sources.client.js, ['client-js']);
