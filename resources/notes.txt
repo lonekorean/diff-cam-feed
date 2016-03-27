@@ -1,9 +1,4 @@
-- To run
-  - npm install
-  - npm start
-  - go to http://127.0.0.1:3000
-
-TROUBLESHOOTING
+Scratch pad of dev notes. Will likely move any relevant info here to the README.
 
 - Must install gulp globally to use via command line
   - npm install -g gulp
@@ -12,7 +7,8 @@ TROUBLESHOOTING
 - In package.json, everything in "devDependencies" was moved into "dependences" to make Heroku play nicely with gulp
   - http://stackoverflow.com/questions/24504476/how-to-deploy-node-that-uses-gulp-to-heroku
 
-- Put env.js in root folder in dev, with these contents:
+- For dev, put .env in root folder, with these contents:
+  process.env.PORT = 3000; // do not set in prod (auto-assigned by Heroku)
   process.env.ENVIRONMENT = '';
   process.env.SESSION_SECRET = '';
   process.env.TWITTER_CONSUMER_KEY = '';
