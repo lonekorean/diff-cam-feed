@@ -24,6 +24,13 @@ $(function() {
 	var $historyItemTemplate = $('#history-item-template');
 
 	function init() {
+		// make sure we're on https when in prod
+		var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+		if (!isLocal && window.location.protocol === 'http:') {
+			var secureHref = window.location.href.replace(/^http/, 'https');
+			window.location.href = secureHref;
+		}
+
 		// don't want console logs from adapter.js
 		adapter.disableLog(true);
 
