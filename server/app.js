@@ -12,6 +12,6 @@ if (process.env.ENVIRONMENT !== 'prod') {
 var app = express();
 var router = require('./router')(app);
 
-var server = app.listen(3000, function() {
+var server = app.listen(process.env.PORT, function() {
 	console.log('Listening...');
 });
