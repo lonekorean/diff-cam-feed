@@ -1,8 +1,8 @@
 $(function() {
-	var isTestMode = true;
-	var scoreThreshold = 8;			// min for an image to be considered significant
+	var isTestMode = false;
+	var scoreThreshold = 16;		// min for an image to be considered significant
 	var considerTime = 4000;		// time window to consider best capture, in ms
-	var chillTime = 4000;			// time to chill after committing, in ms
+	var chillTime = 12000;			// time to chill after committing, in ms
 	var historyMax = 3;				// max number of past captures to show on page
 
 	var stopConsideringTimeout;
