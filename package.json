@@ -28,7 +28,6 @@
     "jshint-stylish": "^2.1.0",
     "passport": "^0.3.2",
     "passport-twitter": "^1.0.3",
-    "twitter": "^1.2.5",
-    "webrtc-adapter-test": "^0.2.5"
+    "twitter": "^1.2.5"
   }
 }

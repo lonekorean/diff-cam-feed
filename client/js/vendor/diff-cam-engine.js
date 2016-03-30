@@ -46,6 +46,9 @@ var DiffCamEngine = (function() {
 		diffCanvas = document.createElement('canvas');
 		isReadyToDiff = false;
 
+		// prep video
+		video.autoplay = true;
+
 		// prep capture canvas
 		captureCanvas.width = captureWidth;
 		captureCanvas.height = captureHeight;

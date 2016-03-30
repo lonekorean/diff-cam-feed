@@ -16,7 +16,7 @@ var sources = {
 		'hbs': ['./server/**/*.hbs']
 	},
 	'config': {
-		'js': ['env.js', 'gulpfile.js', 'package.json']
+		'js': ['.env', 'gulpfile.js', 'package.json']
 	}
 };
 
