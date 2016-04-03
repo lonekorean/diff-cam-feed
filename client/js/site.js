@@ -1,6 +1,5 @@
 $(function() {
 	var isTestMode = false;
-	var scoreThreshold = 16;		// min for an image to be considered significant
 	var considerTime = 4000;		// time window to consider best capture, in ms
 	var chillTime = 12000;			// time to chill after committing, in ms
 	var historyMax = 3;				// max number of past captures to show on page
@@ -78,13 +77,13 @@ $(function() {
 
 	function setTweakInputs() {
 		$pixelDiffThreshold.val(DiffCamEngine.getPixelDiffThreshold());
-		$scoreThreshold.val(scoreThreshold);
+		$scoreThreshold.val(DiffCamEngine.getScoreThreshold());
 	}
 
 	function getTweakInputs(e) {
 		e.preventDefault();
 		DiffCamEngine.setPixelDiffThreshold(+$pixelDiffThreshold.val());
-		scoreThreshold = +$scoreThreshold.val();
+		DiffCamEngine.setScoreThreshold(+$scoreThreshold.val());
 	}
 
 	function toggleStreaming() {
@@ -119,7 +118,7 @@ $(function() {
 	function checkCapture(capture) {
 		$motionScore.text(capture.score);
 
-		if (status === 'watching' && capture.score > scoreThreshold) {
+		if (status === 'watching' && capture.hasMotion) {
 			// this diff is good enough to start a consideration time window
 			setStatus('considering');
 			bestCapture = capture;

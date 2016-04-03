@@ -18,6 +18,8 @@ var DiffCamEngine = (function() {
 	var diffHeight;				// downscaled height for diff/motion
 	var isReadyToDiff;			// has a previous capture been made to diff against?
 	var pixelDiffThreshold;		// min for a pixel to be considered significant
+	var scoreThreshold;			// min for an image to be considered significant
+	var includeMotionBox;		// flag to calculate and draw motion bounding box
 
 	function init(options) {
 		// sanity check
@@ -34,6 +36,8 @@ var DiffCamEngine = (function() {
 		diffWidth = options.diffWidth || 64;
 		diffHeight = options.diffHeight || 48;
 		pixelDiffThreshold = options.pixelDiffThreshold || 32;
+		scoreThreshold = options.scoreThreshold || 16;
+		includeMotionBox = options.includeMotionBox || false;
 
 		// callbacks
 		initSuccessCallback = options.initSuccessCallback || function() {};
@@ -122,12 +126,24 @@ var DiffCamEngine = (function() {
 		diffImageData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
 
 		if (isReadyToDiff) {
-			var score = processDiff(diffImageData);
+			var diff = processDiff(diffImageData);
+
 			motionContext.putImageData(diffImageData, 0, 0);
+			if (diff.motionBox) {
+				motionContext.strokeStyle = '#fff';
+				motionContext.strokeRect(
+					diff.motionBox.x.min + 0.5,
+					diff.motionBox.y.min + 0.5,
+					diff.motionBox.x.max - diff.motionBox.x.min,
+					diff.motionBox.y.max - diff.motionBox.y.min
+				);
+			}
 			captureCallback({
 				imageData: captureImageData,
-				score: score,
-				getURL: getCaptureUrl.bind(null, captureImageData)
+				score: diff.score,
+				hasMotion: diff.score >= scoreThreshold,
+				motionBox: diff.motionBox,
+				getURL: getCaptureUrl.bind(null, captureImageData),
 			});
 		}
 
@@ -142,6 +158,7 @@ var DiffCamEngine = (function() {
 
 		// pixel adjustments are done by reference directly on diffImageData
 		var score = 0;
+		var motionBox = undefined;
 		for (var i = 0; i < rgba.length; i += 4) {
 			var pixelDiff = rgba[i] * 0.3 + rgba[i + 1] * 0.6 + rgba[i + 2] * 0.1;
 			var normalized = Math.min(255, pixelDiff * (255 / pixelDiffThreshold));
@@ -151,10 +168,35 @@ var DiffCamEngine = (function() {
 
 			if (pixelDiff >= pixelDiffThreshold) {
 				score++;
+
+				if (includeMotionBox) {
+					motionBox = calculateMotionBox(motionBox, i / 4);
+				}
 			}
 		}
 
-		return score;
+		return {
+			score: score,
+			motionBox: score > scoreThreshold ? motionBox : undefined
+		};
+	}
+
+	function calculateMotionBox(currentMotionBox, pixelIndex) {
+		var x = pixelIndex % diffWidth;
+		var y = Math.floor(pixelIndex / diffWidth);
+
+		// init motion box on demand
+		var motionBox = currentMotionBox || {
+			x: { min: x, max: x },
+			y: { min: y, max: y }
+		};
+
+		motionBox.x.min = Math.min(motionBox.x.min, x);
+		motionBox.x.max = Math.max(motionBox.x.max, x);
+		motionBox.y.min = Math.min(motionBox.y.min, y);
+		motionBox.y.max = Math.max(motionBox.y.max, y);
+
+		return motionBox;
 	}
 
 	function getCaptureUrl(captureImageData) {
@@ -171,10 +213,20 @@ var DiffCamEngine = (function() {
 		pixelDiffThreshold = val;
 	}
 
+	function getScoreThreshold() {
+		return scoreThreshold;
+	}
+
+	function setScoreThreshold(val) {
+		scoreThreshold = val;
+	}
+
 	return {
 		// public getters/setters
 		getPixelDiffThreshold: getPixelDiffThreshold,
 		setPixelDiffThreshold: setPixelDiffThreshold,
+		getScoreThreshold: getScoreThreshold,
+		setScoreThreshold: setScoreThreshold,
 
 		// public functions
 		init: init,
