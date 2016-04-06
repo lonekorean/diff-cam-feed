@@ -118,12 +118,12 @@ var DiffCamEngine = (function() {
 	function capture() {
 		// save a full-sized copy of capture
 		captureContext.drawImage(video, 0, 0, captureWidth, captureHeight);
-		captureImageData = captureContext.getImageData(0, 0, captureWidth, captureHeight);
+		var captureImageData = captureContext.getImageData(0, 0, captureWidth, captureHeight);
 
 		// diff current capture over previous capture, leftover from last time
 		diffContext.globalCompositeOperation = 'difference';
 		diffContext.drawImage(video, 0, 0, diffWidth, diffHeight);
-		diffImageData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
+		var diffImageData = diffContext.getImageData(0, 0, diffWidth, diffHeight);
 
 		if (isReadyToDiff) {
 			var diff = processDiff(diffImageData);
