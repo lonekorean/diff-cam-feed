@@ -2,8 +2,11 @@ var DiffCamEngine = (function() {
 	var stream;					// stream obtained from webcam
 	var video;					// shows stream
 	var captureCanvas;			// internal canvas for capturing full images from video
+	var captureContext;			// context for capture canvas
 	var diffCanvas;				// internal canvas for diffing downscaled captures
+	var diffContext;			// context for diff canvas
 	var motionCanvas;			// receives processed diff images
+	var motionContext;			// context for motion canvas
 
 	var initSuccessCallback;	// called when init succeeds
 	var initErrorCallback;		// called when init fails
@@ -20,6 +23,7 @@ var DiffCamEngine = (function() {
 	var pixelDiffThreshold;		// min for a pixel to be considered significant
 	var scoreThreshold;			// min for an image to be considered significant
 	var includeMotionBox;		// flag to calculate and draw motion bounding box
+	var includeMotionPixels;	// flag to create object denoting pixels with motion
 
 	function init(options) {
 		// sanity check
@@ -38,6 +42,7 @@ var DiffCamEngine = (function() {
 		pixelDiffThreshold = options.pixelDiffThreshold || 32;
 		scoreThreshold = options.scoreThreshold || 16;
 		includeMotionBox = options.includeMotionBox || false;
+		includeMotionPixels = options.includeMotionPixels || false;
 
 		// callbacks
 		initSuccessCallback = options.initSuccessCallback || function() {};
@@ -143,7 +148,13 @@ var DiffCamEngine = (function() {
 				score: diff.score,
 				hasMotion: diff.score >= scoreThreshold,
 				motionBox: diff.motionBox,
-				getURL: getCaptureUrl.bind(null, captureImageData),
+				motionPixels: diff.motionPixels,
+				getURL: function() {
+					return getCaptureUrl(this.imageData);
+				},
+				checkMotionPixel: function(x, y) {
+					return checkMotionPixel(this.motionPixels, x, y)
+				}
 			});
 		}
 
@@ -158,6 +169,7 @@ var DiffCamEngine = (function() {
 
 		// pixel adjustments are done by reference directly on diffImageData
 		var score = 0;
+		var motionPixels = includeMotionPixels ? [] : undefined;
 		var motionBox = undefined;
 		for (var i = 0; i < rgba.length; i += 4) {
 			var pixelDiff = rgba[i] * 0.3 + rgba[i + 1] * 0.6 + rgba[i + 2] * 0.1;
@@ -168,27 +180,38 @@ var DiffCamEngine = (function() {
 
 			if (pixelDiff >= pixelDiffThreshold) {
 				score++;
+				coords = calculateCoordinates(i / 4);
 
 				if (includeMotionBox) {
-					motionBox = calculateMotionBox(motionBox, i / 4);
+					motionBox = calculateMotionBox(motionBox, coords.x, coords.y);
 				}
+
+				if (includeMotionPixels) {
+					motionPixels = calculateMotionPixels(motionPixels, coords.x, coords.y, pixelDiff);
+				}
+
 			}
 		}
 
 		return {
 			score: score,
-			motionBox: score > scoreThreshold ? motionBox : undefined
+			motionBox: score > scoreThreshold ? motionBox : undefined,
+			motionPixels: motionPixels
 		};
 	}
 
-	function calculateMotionBox(currentMotionBox, pixelIndex) {
-		var x = pixelIndex % diffWidth;
-		var y = Math.floor(pixelIndex / diffWidth);
+	function calculateCoordinates(pixelIndex) {
+		return {
+			x: pixelIndex % diffWidth,
+			y: Math.floor(pixelIndex / diffWidth)
+		};
+	}
 
+	function calculateMotionBox(currentMotionBox, x, y) {
 		// init motion box on demand
 		var motionBox = currentMotionBox || {
-			x: { min: x, max: x },
-			y: { min: y, max: y }
+			x: { min: coords.x, max: x },
+			y: { min: coords.y, max: y }
 		};
 
 		motionBox.x.min = Math.min(motionBox.x.min, x);
@@ -199,10 +222,21 @@ var DiffCamEngine = (function() {
 		return motionBox;
 	}
 
+	function calculateMotionPixels(motionPixels, x, y, pixelDiff) {
+		motionPixels[x] = motionPixels[x] || [];
+		motionPixels[x][y] = true;
+
+		return motionPixels;
+	}
+
 	function getCaptureUrl(captureImageData) {
 		// may as well borrow captureCanvas
 		captureContext.putImageData(captureImageData, 0, 0);
 		return captureCanvas.toDataURL();
+	}
+
+	function checkMotionPixel(motionPixels, x, y) {
+		return motionPixels && motionPixels[x] && motionPixels[x][y];
 	}
 
 	function getPixelDiffThreshold() {
