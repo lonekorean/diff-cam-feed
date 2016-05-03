@@ -2,6 +2,10 @@
 
 Web app that uses motion detection to take a snapshot when something moves, then uploads the image to Twitter.
 
+### Demo
+
+Visit http://diffcam.com/ to see this in action.
+
 ### Notes
 
 Powered by diff-cam-engine (https://github.com/lonekorean/diff-cam-engine).
