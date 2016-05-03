@@ -3,15 +3,17 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="Web app that uses motion detection to take a snapshot when something moves, then uploads the image to Twitter.">
 
-		<title>Diff Cam</title>
+		<title>Diff Cam Feed</title>
 
+		<link rel="icon" type="image/png" href="images/favicon.png" />
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 		<link rel="stylesheet" href="css/site.css">
 	</head>
 	<body>
 		{{#unless user}}
-			<h1>Sign in to upload captured images to your feed</h1><br>
+			<h1>Sign in to continue. Captured images will be uploaded to your feed.</h1><br>
 			<a href="/twitter/login" class="twitter-button"><img src="images/sign-in-with-twitter.png" alt="Sign in with Twitter"></a>
 		{{else}}
 			<header>
