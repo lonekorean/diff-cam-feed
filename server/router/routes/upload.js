@@ -23,7 +23,7 @@ router.post('/', function(req, res) {
 				console.log('Error uploading media:', error);
 			} else {
 				var statusUpdate = {
-					status: 'Diff Cam score: ' + req.body.score,
+					status: 'Motion score: ' + req.body.score + ' #diffcam',
 					media_ids: media.media_id_string
 				};
 				client.post('statuses/update', statusUpdate, function(error, tweet, response) {
