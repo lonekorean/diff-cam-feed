@@ -7,5 +7,5 @@ node_modules/
 
 # ignore specific filenames
 .DS_Store
-.env
+config.js
 Thumbs.db

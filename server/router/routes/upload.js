@@ -5,8 +5,8 @@ var router = express.Router();
 
 router.post('/', function(req, res) {
 	var client = new twitter({
-		consumer_key: process.env.TWITTER_CONSUMER_KEY,
-		consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+		consumer_key: global.config.TWITTER_CONSUMER_KEY,
+		consumer_secret: global.config.TWITTER_CONSUMER_SECRET,
 		access_token_key: req.user.tokenKey,
 		access_token_secret: req.user.tokenSecret
 	});
