@@ -5,6 +5,7 @@
   "description": "Web app that uses motion detection to take a snapshot when something moves, then uploads the image to Twitter.",
   "main": "dist/server/app.js",
   "scripts": {
+    "preinstall": "npm install -g gulp",
     "start": "node dist/server/app.js",
     "postinstall": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1"

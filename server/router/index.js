@@ -11,8 +11,8 @@ module.exports = function(app) {
 	app.set('views', './dist/server/views');
 
 	var twitterOptions = {
-		consumerKey: process.env.TWITTER_CONSUMER_KEY,
-		consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
+		consumerKey: global.config.TWITTER_CONSUMER_KEY,
+		consumerSecret: global.config.TWITTER_CONSUMER_SECRET,
 		callbackURL: '/twitter/return'
 	};
 	passport.use(new passportTwitter.Strategy(twitterOptions, function(tokenKey, tokenSecret, profile, done) {
@@ -35,7 +35,7 @@ module.exports = function(app) {
 		done(null, obj);
 	});
 
-	app.use(expressSession({ secret: process.env.SESSION_SECRET, resave: true, saveUninitialized: true }));
+	app.use(expressSession({ secret: global.config.SESSION_SECRET, resave: true, saveUninitialized: true }));
 	app.use(passport.initialize());
 	app.use(passport.session());
 	app.use(bodyParser.json({ limit: '2mb' }));

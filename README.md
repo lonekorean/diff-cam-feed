@@ -12,14 +12,14 @@ Powered by diff-cam-engine (https://github.com/lonekorean/diff-cam-engine).
 
 To run: `npm install`, then `gulp` (or `gulp watch`), then `npm start`. Everything is built to `/dist`. If you're in dev, hit `http://localhost:3000` to run the web app.
 
-In dev, you'll want to create a `.env` file in the root with the following contents (edit as appropriate):
+In dev, you'll want to rename a `config.sample.js` to `config.js` and in this file add the following contents (edit as appropriate):
 
 ```javascript
-process.env.ENVIRONMENT = 'dev';
-process.env.PORT = 3000; // do not set in prod (auto-assigned by Heroku)
-process.env.SESSION_SECRET = 'your secret string';
-process.env.TWITTER_CONSUMER_KEY = 'your twitter consumer key';
-process.env.TWITTER_CONSUMER_SECRET = 'your twitter consumer secret';
+global.config.ENVIRONMENT = 'dev';
+global.config.PORT = 3000; // do not set in prod (auto-assigned by Heroku)
+global.config.SESSION_SECRET = 'your secret string';
+global.config.TWITTER_CONSUMER_KEY = 'your twitter consumer key';
+global.config.TWITTER_CONSUMER_SECRET = 'your twitter consumer secret';
 ```
 
 Diff Cam Feed relies on a registered Twitter app. You can create one via [Twitter Application Management](https://apps.twitter.com/). The `TWITTER_CONSUMER_KEY` and `TWITTER_CONSUMER_SECRET` values above will be provided when you do so.
