@@ -4,7 +4,7 @@ Web app that uses motion detection to take a snapshot when something moves, then
 
 ### Demo
 
-Visit http://diffcam.com/ to see this in action.
+Visit https://lonekorean.github.io/diff-cam-project/ to see this in action.
 
 ### Notes
 
